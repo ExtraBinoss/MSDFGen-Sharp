@@ -3,3 +3,10 @@ C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Core\obj\Debug\n
 C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Core\obj\Debug\net9.0\Msdfgen.Core.AssemblyInfo.cs
 C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Core\obj\Debug\net9.0\Msdfgen.Core.csproj.CoreCompileInputs.cache
 C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Core\obj\Debug\net9.0\Msdfgen.Core.sourcelink.json
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Core\bin\Debug\net9.0\Msdfgen.Core.deps.json
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Core\bin\Debug\net9.0\Msdfgen.Core.dll
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Core\bin\Debug\net9.0\Msdfgen.Core.pdb
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Core\obj\Debug\net9.0\Msdfgen.Core.dll
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Core\obj\Debug\net9.0\refint\Msdfgen.Core.dll
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Core\obj\Debug\net9.0\Msdfgen.Core.pdb
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Core\obj\Debug\net9.0\ref\Msdfgen.Core.dll
