@@ -11,7 +11,7 @@ namespace Msdfgen.Cli
         public void Process(CliOptions options)
         {
             // 1. Load Shape
-            Shape shape = LoadShape(options);
+            Shape? shape = LoadShape(options);
             if (shape == null) return;
 
             // 2. Pre-process
@@ -180,52 +180,52 @@ namespace Msdfgen.Cli
         {
             try 
             {
-                string baseDir = "Msdfgen.Cli"; 
-                if (Directory.Exists(baseDir))
+                // Determine base directory: favor "Msdfgen.Cli" if it exists (running from root), else use current directory.
+                string baseDir = "Msdfgen.Cli";
+                if (!Directory.Exists(baseDir))
                 {
-                    string rawMsdfDir = Path.Combine(baseDir, "RawMsdf");
-                    string renderDir = Path.Combine(baseDir, "Render");
-                    
-                    if (!Directory.Exists(rawMsdfDir)) Directory.CreateDirectory(rawMsdfDir);
-                    if (!Directory.Exists(renderDir)) Directory.CreateDirectory(renderDir);
-                    
-                    // Auto-generate OutputFile if not specified
-                    if (!options.OutputFileSpecified)
+                    baseDir = ".";
+                }
+
+                string rawMsdfDir = Path.Combine(baseDir, "RawMsdf");
+                string renderDir = Path.Combine(baseDir, "Render");
+                
+                if (!Directory.Exists(rawMsdfDir)) Directory.CreateDirectory(rawMsdfDir);
+                if (!Directory.Exists(renderDir)) Directory.CreateDirectory(renderDir);
+                
+                // Auto-generate OutputFile if not specified
+                if (!options.OutputFileSpecified)
+                {
+                    string charName = GetCharName(options.CharCode);
+                    // If OutputFile was null/default, we set it here.
+                    // Note: CliOptions defaults OutputFile to "output.png", so we overwrite it if !OutputFileSpecified
+                    options.OutputFile = Path.Combine(rawMsdfDir, $"raw_msdf_{charName}.png");
+                }
+                else if (!string.IsNullOrEmpty(options.OutputFile))
+                {
+                    // User provided a filename/path
+                    string? dir = Path.GetDirectoryName(options.OutputFile);
+                    if (string.IsNullOrEmpty(dir))
                     {
-                        string charName = GetCharName(options.CharCode);
-                        options.OutputFile = Path.Combine(rawMsdfDir, $"raw_msdf_{charName}.png");
+                            // It's just a filename, put in RawMsdf
+                            options.OutputFile = Path.Combine(rawMsdfDir, options.OutputFile);
                     }
-                    else if (!string.IsNullOrEmpty(options.OutputFile))
+                    // Else respect user path
+                }
+                
+                // Auto-generate TestRenderFile if specified (flag true) but no file given
+                if (options.TestRenderSpecified && string.IsNullOrEmpty(options.TestRenderFile))
+                {
+                    string charName = GetCharName(options.CharCode);
+                    options.TestRenderFile = Path.Combine(renderDir, $"rendered_{charName}.png");
+                }
+                else if (!string.IsNullOrEmpty(options.TestRenderFile))
+                {
+                    // If just filename, put in RenderDir
+                    string? dir = Path.GetDirectoryName(options.TestRenderFile);
+                    if (string.IsNullOrEmpty(dir))
                     {
-                        // Existing logic for specified file, just ensuring directory correctness relative to rawMsdfDir if needed?
-                        // User might have provided full path or relative. Use as is if it looks like a path?
-                        // Previous logic forced it into RawMsdfDir. Let's keep that behavior if it's just a filename.
-                        string fName = Path.GetFileName(options.OutputFile);
-                        string dir = Path.GetDirectoryName(options.OutputFile);
-                        if (string.IsNullOrEmpty(dir))
-                        {
-                             // It's just a filename, put in RawMsdf
-                             options.OutputFile = Path.Combine(rawMsdfDir, fName);
-                        }
-                        // Else user provided a path, respect it (or relative to cwd)
-                    }
-                    
-                    // Auto-generate TestRenderFile if specified (flag true) but no file given, OR if not specified but user wants auto behavior?
-                    // User asked: "if I omit the -o and testrender 'path'..." implies he might invoke -testrender w/o path.
-                    if (options.TestRenderSpecified && string.IsNullOrEmpty(options.TestRenderFile))
-                    {
-                        string charName = GetCharName(options.CharCode);
-                        options.TestRenderFile = Path.Combine(renderDir, $"rendered_{charName}.png");
-                    }
-                    else if (!string.IsNullOrEmpty(options.TestRenderFile))
-                    {
-                         // Similar logic: if just filename, put in RenderDir
-                        string fName = Path.GetFileName(options.TestRenderFile);
-                        string dir = Path.GetDirectoryName(options.TestRenderFile);
-                        if (string.IsNullOrEmpty(dir))
-                        {
-                             options.TestRenderFile = Path.Combine(renderDir, fName);
-                        }
+                            options.TestRenderFile = Path.Combine(renderDir, options.TestRenderFile);
                     }
                 }
             }

@@ -120,7 +120,8 @@ namespace MsdfAtlasGen
             string outputFilename,
             FontMetrics metrics,
             YAxisOrientation yDirection = YAxisOrientation.Downward,
-            Padding? outerPixelPadding = null)
+            Padding? outerPixelPadding = null,
+            int spacing = 0)
         {
             if (fonts.Length == 0) return;
 
@@ -141,7 +142,8 @@ namespace MsdfAtlasGen
                     Face = fontName,
                     Size = (int)fontSize,
                     Unicode = 1,
-                    Padding = $"{paddingTop},{paddingRight},{paddingBottom},{paddingLeft}"
+                    Padding = $"{paddingTop},{paddingRight},{paddingBottom},{paddingLeft}",
+                    Spacing = $"{spacing},{spacing}"
                 },
                 Common = new BmFontCommon
                 {

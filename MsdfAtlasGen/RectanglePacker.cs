@@ -171,7 +171,7 @@ namespace MsdfAtlasGen
 
         private static int RateFit(int w, int h, int sw, int sh)
         {
-            return Math.Min(sw - w, sh - h);
+            return (sw * sh) - (w * h);
         }
 
         private void SplitSpace(int index, int w, int h)
