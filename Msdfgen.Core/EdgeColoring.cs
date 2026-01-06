@@ -91,7 +91,8 @@ namespace Msdfgen
                     // // This is critical for smooth shapes like O, 0, etc.
                     // EdgeColor[] colors = { EdgeColor.CYAN, EdgeColor.MAGENTA, EdgeColor.YELLOW };
                     SwitchColor(ref color, ref seed);
-                    
+                    foreach (var edge in contour.Edges)
+                        edge.Color = color;
                     // if (contour.Edges.Count >= 3)
                     // {
                     //     // Assign colors cyclically
