@@ -11,3 +11,11 @@ Msdfgen.Cli/Render/**
 Msdfgen.Cli/ExceptedOutput/**
 Msdfgen.Cli/bin/**
 Msdfgen.Cli/obj/**
+
+# Msdfgen.Core
+Msdfgen.Core/bin/**
+Msdfgen.Core/obj/**
+
+# Msdfgen.Extensions
+Msdfgen.Extensions/bin/**
+Msdfgen.Extensions/obj/**
