@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Msdfgen;
-using Typography.OpenFont;
+using Msdfgen.Extensions;
 
 namespace MsdfAtlasGen
 {
@@ -43,13 +43,13 @@ namespace MsdfAtlasGen
         private readonly Dictionary<uint, int> _glyphsByCodepoint;
         private readonly Dictionary<(int, int), double> _kerning;
         private readonly List<GlyphGeometry> _ownGlyphs;
-        private string _name;
+        private string _name = string.Empty;
 
-        public FontGeometry() : this(null)
+        public FontGeometry() : this((List<GlyphGeometry>?)null)
         {
         }
 
-        public FontGeometry(List<GlyphGeometry> glyphStorage)
+        public FontGeometry(List<GlyphGeometry>? glyphStorage)
         {
             _geometryScale = 1;
             _metrics = new FontMetrics();
@@ -63,22 +63,16 @@ namespace MsdfAtlasGen
             _kerning = new Dictionary<(int, int), double>();
         }
 
-        public int LoadGlyphRange(Typeface typeface, double fontScale, uint rangeStart, uint rangeEnd, bool preprocessGeometry = true, bool enableKerning = true)
+        public int LoadGlyphRange(FontHandle font, double fontScale, uint rangeStart, uint rangeEnd, bool preprocessGeometry = true, bool enableKerning = true)
         {
-            // Note: Loading by index is not fully supported by the underlying FontLoader extensions yet (assumes char).
-            // We will attempt to cast index to char, which works for unicode codepoints, but actual glyph index loading requires updating FontLoader.
-            // For now, assuming rangeStart/End are Codepoints if used here, or this might fail for high indices.
-            
-            if (!(_glyphs.Count == _rangeEnd && LoadMetrics(typeface, fontScale)))
+            if (!(_glyphs.Count == _rangeEnd && LoadMetrics(font, fontScale)))
                 return -1;
-            
-            // _glyphs.Capacity = _glyphs.Count + (int)(rangeEnd - rangeStart);
+
             int loaded = 0;
             for (uint index = rangeStart; index < rangeEnd; ++index)
             {
                 var glyph = new GlyphGeometry();
-                // Trying to load as char (codepoint)
-                if (glyph.Load(typeface, _geometryScale, (char)index, preprocessGeometry))
+                if (glyph.Load(font, _geometryScale, new GlyphIndex(index), preprocessGeometry))
                 {
                     AddGlyph(glyph);
                     ++loaded;
@@ -86,75 +80,83 @@ namespace MsdfAtlasGen
             }
 
             if (enableKerning)
-                LoadKerning(typeface);
-            
+                LoadKerning(font);
+
             _preferredIdentifierType = GlyphIdentifierType.GlyphIndex;
             return loaded;
         }
 
-        public int LoadGlyphset(Typeface typeface, double fontScale, Charset glyphset, bool preprocessGeometry = true, bool enableKerning = true)
+        public int LoadGlyphset(FontHandle font, double fontScale, Charset glyphset, bool preprocessGeometry = true, bool enableKerning = true)
         {
-            if (!(_glyphs.Count == _rangeEnd && LoadMetrics(typeface, fontScale)))
+            if (!(_glyphs.Count == _rangeEnd && LoadMetrics(font, fontScale)))
                 return -1;
 
             int loaded = 0;
             foreach (uint index in glyphset)
             {
                 var glyph = new GlyphGeometry();
-                 // Assuming index is Codepoint in our Charset implementation usually, but here it says 'glyphset'.
-                 // If glyphset means glyph indices, we have the same issue.
-                if (glyph.Load(typeface, _geometryScale, (char)index, preprocessGeometry))
+                if (glyph.Load(font, _geometryScale, new GlyphIndex(index), preprocessGeometry))
                 {
                     AddGlyph(glyph);
                     ++loaded;
                 }
             }
-             if (enableKerning)
-                LoadKerning(typeface);
+
+            if (enableKerning)
+                LoadKerning(font);
             _preferredIdentifierType = GlyphIdentifierType.GlyphIndex;
             return loaded;
         }
 
-           public int LoadCharset(Typeface typeface, double fontScale, Charset charset, bool preprocessGeometry = true, bool enableKerning = true)
+        public int LoadCharset(FontHandle font, double fontScale, Charset charset, bool preprocessGeometry = true, bool enableKerning = true)
         {
-               if (!(_glyphs.Count == _rangeEnd && LoadMetrics(typeface, fontScale)))
+            if (!(_glyphs.Count == _rangeEnd && LoadMetrics(font, fontScale)))
                 return -1;
 
             int loaded = 0;
             foreach (uint cp in charset)
             {
                 var glyph = new GlyphGeometry();
-                if (glyph.Load(typeface, _geometryScale, (char)cp, preprocessGeometry))
+                if (glyph.Load(font, _geometryScale, cp, preprocessGeometry))
                 {
                     AddGlyph(glyph);
                     ++loaded;
                 }
             }
             if (enableKerning)
-                LoadKerning(typeface);
+                LoadKerning(font);
             _preferredIdentifierType = GlyphIdentifierType.UnicodeCodepoint;
             return loaded;
         }
 
-        public bool LoadMetrics(Typeface typeface, double fontScale)
+        public bool LoadMetrics(FontHandle font, double fontScale)
         {
-            if (typeface == null) return false;
+            if (font == null) return false;
 
-            double unitsPerEm = typeface.UnitsPerEm > 0 ? typeface.UnitsPerEm : DefaultFontUnitsPerEm;
-            _geometryScale = fontScale / unitsPerEm;
+            if (!FontLoader.GetFontMetrics(out Msdfgen.Extensions.FontMetrics ftMetrics, font, FontCoordinateScaling.None))
+                return false;
 
-            _metrics.EmSize = unitsPerEm * _geometryScale;
+            _metrics = new FontMetrics
+            {
+                EmSize = ftMetrics.EmSize,
+                AscenderY = ftMetrics.AscenderY,
+                DescenderY = ftMetrics.DescenderY,
+                LineHeight = ftMetrics.LineHeight,
+                UnderlineY = ftMetrics.UnderlineY,
+                UnderlineThickness = ftMetrics.UnderlineThickness
+            };
 
-            // Use typographic metrics: ascender/descender/lineGap
-            double asc = typeface.Ascender;
-            double desc = typeface.Descender;
-            double lineGap = typeface.LineGap;
-            _metrics.AscenderY = asc * _geometryScale;
-            _metrics.DescenderY = desc * _geometryScale;
-            _metrics.LineHeight = (asc - desc + lineGap) * _geometryScale;
+            if (_metrics.EmSize <= 0)
+                _metrics.EmSize = DefaultFontUnitsPerEm;
 
-            _metrics.UnderlineY = typeface.UnderlinePosition * _geometryScale;
-            _metrics.UnderlineThickness = 0; // Typography.OpenFont doesn't expose thickness directly
+            _geometryScale = fontScale / _metrics.EmSize;
+
+            _metrics.EmSize *= _geometryScale;
+            _metrics.AscenderY *= _geometryScale;
+            _metrics.DescenderY *= _geometryScale;
+            _metrics.LineHeight *= _geometryScale;
+            _metrics.UnderlineY *= _geometryScale;
+            _metrics.UnderlineThickness *= _geometryScale;
 
             return true;
         }
@@ -179,13 +181,22 @@ namespace MsdfAtlasGen
             return true;
         }
 
-        public int LoadKerning(Typeface typeface)
+        public int LoadKerning(FontHandle font)
         {
-            // Populate kerning using legacy 'kern' table distances (if available)
-            // Note: For full GPOS kerning, a layout engine is needed; this provides basic pairs.
             _kerning.Clear();
-            // We can't iterate pairs directly without walking text; leave as zero for now.
-            return 0;
+            int loaded = 0;
+            for (int i = _rangeStart; i < _rangeEnd; ++i)
+            {
+                for (int j = _rangeStart; j < _rangeEnd; ++j)
+                {
+                    if (FontLoader.GetKerning(out double kern, font, new GlyphIndex((uint)_glyphs[i].GetIndex()), new GlyphIndex((uint)_glyphs[j].GetIndex()), FontCoordinateScaling.None) && kern != 0)
+                    {
+                        _kerning[( _glyphs[i].GetIndex(), _glyphs[j].GetIndex() )] = _geometryScale * kern;
+                        ++loaded;
+                    }
+                }
+            }
+            return loaded;
         }
 
         public void SetName(string name)
@@ -198,14 +209,14 @@ namespace MsdfAtlasGen
         public GlyphIdentifierType GetPreferredIdentifierType() => _preferredIdentifierType;
         public GlyphRange GetGlyphs() => new GlyphRange(_glyphs, _rangeStart, _rangeEnd);
 
-        public GlyphGeometry GetGlyph(int index)
+        public GlyphGeometry? GetGlyph(int index)
         {
             if (_glyphsByIndex.TryGetValue(index, out int pos))
                 return _glyphs[pos];
             return null;
         }
 
-        public GlyphGeometry GetGlyph(uint codepoint)
+        public GlyphGeometry? GetGlyph(uint codepoint)
         {
             if (_glyphsByCodepoint.TryGetValue(codepoint, out int pos))
                 return _glyphs[pos];

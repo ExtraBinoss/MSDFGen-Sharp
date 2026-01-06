@@ -5,7 +5,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Collections.Generic;
 using Msdfgen;
-using Typography.OpenFont;
+using Msdfgen.Extensions;
 
 namespace MsdfAtlasGen
 {
@@ -105,7 +105,7 @@ namespace MsdfAtlasGen
 
     /// <summary>
     /// Exports font atlas data to BMFont XML format (.fnt)
-    /// Uses Typography.OpenFont for accurate glyph bounds extraction
+    /// Uses FreeType-backed FontGeometry data for glyph metrics and positions
     /// </summary>
     public static class FntExporter
     {
@@ -118,33 +118,35 @@ namespace MsdfAtlasGen
             double distanceRange,
             string pngFilename,
             string outputFilename,
-            Typeface sourceTypeface,
-            float lineHeight,
-            float baseLine,
-            float appliedScale,
+            FontMetrics metrics,
             YAxisOrientation yDirection = YAxisOrientation.Downward,
             Padding? outerPixelPadding = null)
         {
             if (fonts.Length == 0) return;
 
             var font = fonts[0]; // Use first font
+            var fontName = font.GetName() ?? "Unknown";
 
-            // Calculate padding: Range/2 (from DoubleRange) + 2 (from SetOuterPixelPadding)
-            float padding = (float)(distanceRange / 2.0) + 2.0f;
+            // Use actual outer pixel padding from packer config
+            Padding actualPadding = outerPixelPadding ?? new Padding(0);
+            int paddingLeft = (int)actualPadding.L;
+            int paddingRight = (int)actualPadding.R;
+            int paddingTop = (int)actualPadding.T;
+            int paddingBottom = (int)actualPadding.B;
 
             var bmFont = new BmFont
             {
                 Info = new BmFontInfo
                 {
-                    Face = sourceTypeface?.Name ?? "Unknown",
+                    Face = fontName,
                     Size = (int)fontSize,
                     Unicode = 1,
-                    Padding = $"{(int)padding},{(int)padding},{(int)padding},{(int)padding}"
+                    Padding = $"{paddingTop},{paddingRight},{paddingBottom},{paddingLeft}"
                 },
                 Common = new BmFontCommon
                 {
-                    LineHeight = (int)Math.Ceiling(lineHeight),
-                    Base = (int)Math.Ceiling(baseLine),
+                    LineHeight = (int)Math.Ceiling(metrics.LineHeight),
+                    Base = (int)Math.Ceiling(metrics.AscenderY),
                     ScaleW = atlasWidth,
                     ScaleH = atlasHeight
                 },
@@ -168,35 +170,32 @@ namespace MsdfAtlasGen
                 Kernings = new BmFontKernings()
             };
 
-            // Export each glyph using Typography.OpenFont for advance and metrics
+            // Export each glyph using stored geometry/metrics from FontGeometry
             foreach (var glyph in font.GetGlyphs().Glyphs)
             {
                 glyph.GetBoxRect(out int x, out int y, out int w, out int h);
 
-                // Get glyph info from source typeface
                 int glyphIndex = glyph.GetIndex();
-                // Get advance width from source typeface
                 float xadvance = (float)glyph.GetAdvanceUnscaled();
-                if (glyphIndex >= 0)
-                {
-                    xadvance = sourceTypeface != null
-                        ? sourceTypeface.GetAdvanceWidthFromGlyphIndex((ushort)glyphIndex) * appliedScale
-                        : xadvance;
-                }
                 
-                // Use plane bounds for xoffset/yoffset (matching working FntWriter logic)
+                // Use plane bounds for positioning
                 glyph.GetQuadPlaneBounds(out double pl, out double pb, out double pr, out double pt);
                 
-                float xoffset = (float)(pl * appliedScale) - padding;
-                float yoffset = baseLine - (float)(pt * appliedScale) - padding;
+                // BMFont format (uses top-left origin):
+                // - xoffset: horizontal offset from cursor position to left edge of glyph quad
+                // - yoffset: vertical offset from baseline to TOP edge of glyph quad (negative = above baseline)
+                // The plane bounds from MSDF are already scaled and include padding in the texture
+                float xoffset = (float)pl;
+                float yoffset = -(float)pt;
 
                 int codepoint = (int)glyph.GetCodepoint();
+                string charString = codepoint != 0 ? char.ConvertFromUtf32(codepoint) : "";
 
                 bmFont.Chars.CharList.Add(new BmFontChar
                 {
                     Id = codepoint,
                     Index = glyphIndex,
-                    Char = char.ConvertFromUtf32(codepoint),
+                    Char = charString,
                     Width = w,
                     Height = h,
                     XOffset = (int)Math.Round(xoffset),

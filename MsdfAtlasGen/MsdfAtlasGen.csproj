@@ -3,7 +3,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Msdfgen.Core\Msdfgen.Core.csproj" />
     <ProjectReference Include="..\Msdfgen.Extensions\Msdfgen.Extensions.csproj" />
-    <ProjectReference Include="..\Typography.OpenFont\Typography.OpenFont.csproj" />
   </ItemGroup>
 
   <ItemGroup>

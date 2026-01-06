@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Msdfgen;
-using Typography.OpenFont;
+using Msdfgen.Extensions;
 
 namespace MsdfAtlasGen.Cli
 {
@@ -54,17 +54,18 @@ namespace MsdfAtlasGen.Cli
 
         public int Run()
         {
-            // 1. Load Typeface (Typography.OpenFont)
-            Typeface typeface;
-            try
+            // 1. Load font via FreeType
+            using var ft = FreetypeHandle.Initialize();
+            if (ft == null)
             {
-                using var fs = File.OpenRead(_config.FontPath);
-                var reader = new OpenFontReader();
-                typeface = reader.Read(fs);
+                Console.Error.WriteLine("Failed to initialize FreeType library.");
+                return 1;
             }
-            catch (Exception ex)
+
+            using var fontHandle = FontHandle.LoadFont(ft, _config.FontPath);
+            if (fontHandle == null)
             {
-                Console.Error.WriteLine($"Failed to load font: {ex.Message}");
+                Console.Error.WriteLine("Failed to load font via FreeType.");
                 return 1;
             }
 
@@ -148,7 +149,7 @@ namespace MsdfAtlasGen.Cli
 
             // FontScale is an additional scale multiplier; Size is the primary font size
             // Pass Size * FontScale as the geometry scale
-            fontGeometry.LoadCharset(typeface, _config.Size * _config.FontScale, charset);
+            fontGeometry.LoadCharset(fontHandle, _config.Size * _config.FontScale, charset);
             fontGeometry.SetName(fontName);
 
             // 5. Edge Coloring
@@ -219,19 +220,19 @@ namespace MsdfAtlasGen.Cli
                 {
                     case ImageType.Sdf:
                         var sdfConfig = new GeneratorConfig(attrs.Config.OverlapSupport);
-                        MsdfGenerator.GenerateSDF(bitmap, glyph.GetShape(), proj, range, sdfConfig);
+                        MsdfGenerator.GenerateSDF(bitmap, glyph.GetShape()!, proj, range, sdfConfig);
                         break;
                     case ImageType.Psdf:
                         var psdfTransform = new SDFTransformation(proj, new DistanceMapping(range));
                         var psdfConfig = new GeneratorConfig(attrs.Config.OverlapSupport);
-                        MsdfGenerator.GeneratePSDF(bitmap, glyph.GetShape(), psdfTransform, psdfConfig);
+                        MsdfGenerator.GeneratePSDF(bitmap, glyph.GetShape()!, psdfTransform, psdfConfig);
                         break;
                     case ImageType.Msdf:
-                        MsdfGenerator.GenerateMSDF(bitmap, glyph.GetShape(), proj, range, attrs.Config);
+                        MsdfGenerator.GenerateMSDF(bitmap, glyph.GetShape()!, proj, range, attrs.Config);
                         break;
                     case ImageType.Mtsdf:
                         var mtsdfTransform = new SDFTransformation(proj, new DistanceMapping(range));
-                        MsdfGenerator.GenerateMTSDF(bitmap, glyph.GetShape(), mtsdfTransform, attrs.Config);
+                        MsdfGenerator.GenerateMTSDF(bitmap, glyph.GetShape()!, mtsdfTransform, attrs.Config);
                         break;
                 }
             }, channels);
@@ -268,15 +269,9 @@ namespace MsdfAtlasGen.Cli
             {
                 Console.WriteLine($"Saving FNT to: {fntOut}");
                 double distanceRange = _config.PxRange.Upper - _config.PxRange.Lower;
-                
-                // Get font metrics for FNT export from typeface
-                float appliedScale = (float)(_config.Size / (float)typeface.UnitsPerEm);
-                float asc = typeface.Ascender;
-                float desc = typeface.Descender;
-                float lineGap = typeface.LineGap;
-                float lineHeight = (asc - desc + lineGap) * appliedScale;
-                float baseLine = asc * appliedScale;
-                
+
+                var metrics = fontGeometry.GetMetrics();
+
                 FntExporter.Export(
                     fonts.ToArray(),
                     _config.Type,
@@ -286,10 +281,7 @@ namespace MsdfAtlasGen.Cli
                     distanceRange,
                     imageOut,
                     fntOut,
-                    typeface,
-                    lineHeight,
-                    baseLine,
-                    appliedScale,
+                    metrics,
                     _config.YOrigin,
                     _config.OuterPxPadding
                 );
