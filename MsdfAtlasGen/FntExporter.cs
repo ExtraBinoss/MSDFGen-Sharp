@@ -180,13 +180,13 @@ namespace MsdfAtlasGen
                 int glyphIndex = glyph.GetIndex();
                 float xadvance = (float)glyph.GetAdvanceUnscaled();
                 
-                // Use plane bounds for positioning
-                glyph.GetQuadPlaneBounds(out double pl, out double pb, out double pr, out double pt);
+                // Use box bounds for positioning (includes padding, consistent with the image size)
+                glyph.GetBoxPlaneBounds(out double pl, out double pb, out double pr, out double pt);
                 
                 // BMFont format (uses top-left origin):
                 // - xoffset: horizontal offset from cursor position to left edge of glyph quad
                 // - yoffset: vertical offset from baseline to TOP edge of glyph quad (negative = above baseline)
-                // The plane bounds from MSDF are already scaled and include padding in the texture
+                // The plane bounds returned by GetBoxPlaneBounds are relative to the glyph origin (0,0)
                 float xoffset = (float)pl;
                 float yoffset = -(float)pt;
 

@@ -44,13 +44,13 @@ namespace MsdfAtlasGen
         public void Put<S>(int x, int y, Bitmap<S> subBitmap)
         {
             // Dynamic dispatch or check types?
-            if (typeof(T) == typeof(S))
+            if (subBitmap is Bitmap<T> src)
             {
-                BitmapBlit.Blit(Bitmap, subBitmap as Bitmap<T>, x, y, 0, 0, subBitmap.Width, subBitmap.Height);
+                BitmapBlit.Blit(Bitmap, src, x, y, 0, 0, subBitmap.Width, subBitmap.Height);
             }
-            else if (typeof(T) == typeof(byte) && typeof(S) == typeof(float))
+            else if (Bitmap is Bitmap<byte> dstByte && subBitmap is Bitmap<float> srcFloat)
             {
-                BitmapBlit.Blit(Bitmap as Bitmap<byte>, subBitmap as Bitmap<float>, x, y, 0, 0, subBitmap.Width, subBitmap.Height);
+                BitmapBlit.Blit(dstByte, srcFloat, x, y, 0, 0, subBitmap.Width, subBitmap.Height);
             }
             else
             {

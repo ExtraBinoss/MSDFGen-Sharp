@@ -225,6 +225,22 @@ namespace MsdfAtlasGen
             }
         }
 
+        public void GetBoxPlaneBounds(out double l, out double b, out double r, out double t)
+        {
+            if (_box.Rect.W > 0 && _box.Rect.H > 0)
+            {
+                double s = _box.Scale;
+                l = -_box.Translate.X * s;
+                b = -_box.Translate.Y * s;
+                r = l + _box.Rect.W;
+                t = b + _box.Rect.H;
+            }
+            else
+            {
+                l = b = r = t = 0;
+            }
+        }
+
         public void GetQuadAtlasBounds(out double l, out double b, out double r, out double t)
         {
              if (_box.Rect.W > 0 && _box.Rect.H > 0)
