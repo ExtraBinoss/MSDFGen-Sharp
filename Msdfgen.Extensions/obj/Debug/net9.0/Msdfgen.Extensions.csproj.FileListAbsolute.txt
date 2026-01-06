@@ -1,0 +1,6 @@
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\obj\Debug\net9.0\Msdfgen.Extensions.csproj.AssemblyReference.cache
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\obj\Debug\net9.0\Msdfgen.Extensions.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\obj\Debug\net9.0\Msdfgen.Extensions.AssemblyInfoInputs.cache
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\obj\Debug\net9.0\Msdfgen.Extensions.AssemblyInfo.cs
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\obj\Debug\net9.0\Msdfgen.Extensions.csproj.CoreCompileInputs.cache
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\obj\Debug\net9.0\Msdfgen.Extensions.sourcelink.json

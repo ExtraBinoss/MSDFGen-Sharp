@@ -1,0 +1,6 @@
+# C SHARP
+*.dll
+*.exe
+*.pdb
+*.bin
+*.obj

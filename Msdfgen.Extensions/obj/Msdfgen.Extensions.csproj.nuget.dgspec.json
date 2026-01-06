@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj": {}
+    "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj": {}
   },
   "projects": {
-    "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\Msdfgen.Core.csproj": {
+    "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\Msdfgen.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\Msdfgen.Core.csproj",
+        "projectUniqueName": "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\Msdfgen.Core.csproj",
         "projectName": "Msdfgen.Core",
-        "projectPath": "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\Msdfgen.Core.csproj",
+        "projectPath": "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\Msdfgen.Core.csproj",
         "packagesPath": "C:\\Users\\binos\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\obj\\",
+        "outputPath": "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\binos\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -63,14 +63,14 @@
         }
       }
     },
-    "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj": {
+    "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj",
+        "projectUniqueName": "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj",
         "projectName": "Msdfgen.Extensions",
-        "projectPath": "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj",
+        "projectPath": "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj",
         "packagesPath": "C:\\Users\\binos\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\obj\\",
+        "outputPath": "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\binos\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -85,8 +85,8 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\Msdfgen.Core.csproj": {
-                "projectPath": "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\Msdfgen.Core.csproj"
+              "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\Msdfgen.Core.csproj": {
+                "projectPath": "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\Msdfgen.Core.csproj"
               }
             }
           }
