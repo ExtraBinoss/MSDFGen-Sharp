@@ -43,7 +43,7 @@ namespace MsdfAtlasGen
         public BitmapAtlasStorage<T> AtlasStorage => _storage;
         public List<GlyphBox> GetLayout() => _layout;
 
-        public void Generate(GlyphGeometry[] glyphs)
+        public void Generate(GlyphGeometry[] glyphs, IProgress<double>? progress = null)
         {
             int count = glyphs.Length;
             int maxBoxArea = 0;
@@ -65,6 +65,8 @@ namespace MsdfAtlasGen
             
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = _threadCount > 0 ? _threadCount : -1 };
             
+            int completed = 0;
+
             Parallel.For(0, count, parallelOptions, (i) =>
             {
                 var glyph = glyphs[i];
@@ -85,6 +87,9 @@ namespace MsdfAtlasGen
                         _storage.Put(l, b, glyphBitmap);
                     }
                 }
+                
+                int current = System.Threading.Interlocked.Increment(ref completed);
+                progress?.Report((double)current / count);
             });
         }
         

@@ -240,7 +240,17 @@ namespace MsdfAtlasGen.Cli
 
             generator.SetAttributes(generatorAttributes);
             generator.SetThreadCount(threadCount);
-            generator.Generate(glyphs);
+
+            Console.WriteLine($"Generation: {_config.Threads} threads used");
+            var progress = new Progress<double>(percent =>
+            {
+                // Simple textual progress bar
+                // Needs \r to overwrite line
+                Console.Write($"\rGenerating Atlas: {percent * 100:F0}%");
+            });
+
+            generator.Generate(glyphs, progress);
+            Console.WriteLine(); // Newline after completion
 
             // 8. Save outputs
             Console.WriteLine($"Saving image to: {imageOut}");
