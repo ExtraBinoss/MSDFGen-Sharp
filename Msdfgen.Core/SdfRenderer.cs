@@ -37,8 +37,8 @@ namespace Msdfgen
                     // Compute median (standard MSDF technique)
                     float sd = Median(r, g, b);
                     
-                    // Convert distance to opacity
-                    float opacity = (float)Math.Clamp(distanceMapping.Map(sd) + sdBias, 0.0, 1.0);
+                    // Convert distance to opacity: C++ does distVal(sd+sdBias, mapping) where distVal = clamp(mapping(d)+0.5)
+                    float opacity = (float)Math.Clamp(distanceMapping.Map(sd + sdBias) + 0.5, 0.0, 1.0);
                     
                     // Write to output (single channel grayscale or RGB)
                     output[x, y, 0] = opacity;
@@ -72,7 +72,7 @@ namespace Msdfgen
                     double srcY = (y + 0.5) * scaleY;
                     
                     float sd = InterpolateSingle(sdf, srcX, srcY, 0);
-                    float opacity = (float)Math.Clamp(distanceMapping.Map(sd) + sdBias, 0.0, 1.0);
+                    float opacity = (float)Math.Clamp(distanceMapping.Map(sd + sdBias) + 0.5, 0.0, 1.0);
                     
                     output[x, y, 0] = opacity;
                     if (output.Channels >= 3)

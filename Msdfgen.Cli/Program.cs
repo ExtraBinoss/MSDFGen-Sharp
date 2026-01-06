@@ -233,6 +233,16 @@ namespace Msdfgen.Cli
             if (mode == Mode.MTSDF || mode == Mode.MSDF)
             {
                 EdgeColoring.EdgeColoringSimple(shape, angleThreshold);
+                
+                // Debug: Print edge colors
+                for (int c = 0; c < shape.Contours.Count; c++)
+                {
+                    var contour = shape.Contours[c];
+                    var colorSet = new HashSet<EdgeColor>();
+                    foreach (var edge in contour.Edges)
+                        colorSet.Add(edge.Color);
+                    Console.WriteLine($"  Contour {c} colors: {string.Join(", ", colorSet)}");
+                }
             }
 
             // Print metrics if requested
