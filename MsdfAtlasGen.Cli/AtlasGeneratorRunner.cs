@@ -157,7 +157,9 @@ namespace MsdfAtlasGen.Cli
             var fonts = new List<FontGeometry>();
             var fontGeometry = new FontGeometry();
 
-            fontGeometry.LoadCharset(font, _config.FontScale, charset);
+            // FontScale is an additional scale multiplier; Size is the primary font size
+            // Pass Size * FontScale as the geometry scale
+            fontGeometry.LoadCharset(font, _config.Size * _config.FontScale, charset);
             fontGeometry.SetName(fontName);
 
             // 5. Edge Coloring
@@ -187,6 +189,12 @@ namespace MsdfAtlasGen.Cli
             packer.SetPixelRange(_config.PxRange);
             packer.SetMiterLimit(_config.MiterLimit);
             packer.SetSpacing(_config.Spacing);
+            
+            // Configure padding
+            packer.SetInnerPixelPadding(_config.InnerPxPadding);
+            packer.SetOuterPixelPadding(_config.OuterPxPadding);
+            packer.SetInnerUnitPadding(_config.InnerEmPadding);
+            packer.SetOuterUnitPadding(_config.OuterEmPadding);
             
             if (_config.MinSize > 0)
             {
