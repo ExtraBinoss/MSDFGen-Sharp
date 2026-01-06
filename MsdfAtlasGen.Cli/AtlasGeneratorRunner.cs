@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Msdfgen;
 using SixLabors.Fonts;
 
@@ -13,7 +14,38 @@ namespace MsdfAtlasGen.Cli
     public class AtlasGeneratorRunner
     {
         private readonly CliConfig _config;
-        private const string OutputFolder = "output";
+        
+        // Output folder structure inside MsdfAtlasGen.Cli
+        private static string BaseOutputFolder
+        {
+            get
+            {
+                // Get the directory where the CLI executable is located
+                string? exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                if (string.IsNullOrEmpty(exeDir))
+                    exeDir = Directory.GetCurrentDirectory();
+                
+                // Go up to find MsdfAtlasGen.Cli source directory if running from bin
+                if (exeDir.Contains("bin"))
+                {
+                    var current = new DirectoryInfo(exeDir);
+                    while (current != null && current.Name != "MsdfAtlasGen.Cli")
+                    {
+                        current = current.Parent;
+                    }
+                    if (current != null)
+                        return Path.Combine(current.FullName, "output");
+                }
+                
+                // Fallback: use MsdfAtlasGen.Cli/output relative to current working directory
+                return Path.Combine("MsdfAtlasGen.Cli", "output");
+            }
+        }
+
+        // Subdirectories
+        private static string JsonFolder => Path.Combine(BaseOutputFolder, "Json");
+        private static string FntFolder => Path.Combine(BaseOutputFolder, "Fnt");
+        private static string RenderFolder => Path.Combine(BaseOutputFolder, "Renders");
 
         public AtlasGeneratorRunner(CliConfig config)
         {
@@ -36,10 +68,76 @@ namespace MsdfAtlasGen.Cli
                 return 1;
             }
 
+            // Get font name for default filenames
+            string fontName = !string.IsNullOrEmpty(_config.FontName)
+                ? _config.FontName
+                : Path.GetFileNameWithoutExtension(_config.FontPath);
+
             // 2. Prepare output paths
-            string imageOut = ResolveOutputPath(_config.ImageOut, "atlas.png");
-            string? jsonOut = string.IsNullOrEmpty(_config.JsonOut) ? null : ResolveOutputPath(_config.JsonOut, null);
-            string? csvOut = string.IsNullOrEmpty(_config.CsvOut) ? null : ResolveOutputPath(_config.CsvOut, null);
+            // FNT folder contains both .fnt and .png (they go together)
+            // If ImageOut is not explicitly requested, but FNT is, we just use the name from FNT? 
+            // Actually, if ImageOut is NOT empty, use it. If it is empty:
+            // - If ImageOutRequested=true, default name.
+            // - If FntRequested, default name in FNT folder?
+            // - If AutoGenerate, default name.
+            
+            bool autoGenerateOutputs = !_config.ImageOutRequested && 
+                                       !_config.JsonOutRequested && 
+                                       !_config.CsvOutRequested &&
+                                       !_config.GenerateFnt;
+
+            string? imageOut = null;
+            if (_config.ImageOutRequested)
+            {
+                imageOut = ResolveOutputPath(_config.ImageOut, $"{fontName}.png", _config.GenerateFnt ? FntFolder : FntFolder);
+            }
+            else if (_config.GenerateFnt)
+            {
+                 // FNT requires an image. If not explicitly requested, generate in FNT folder with default name.
+                 imageOut = ResolveOutputPath("", $"{fontName}.png", FntFolder);
+            }
+            else if (autoGenerateOutputs)
+            {
+                 // Default behavior (as per requirement: "if I omit ... it just creates those")
+                 // The requirement specifically said "if I omit -imageout and -json".
+                 // So we treat auto-generate as generating image + json.
+                 imageOut = ResolveOutputPath("", $"{fontName}.png", FntFolder); // Or JsonFolder? Default usually PNG somewhere. Let's stick to FntFolder or root?
+                 // The previous implementation used FntFolder for PNG.
+            }
+            // If still null (e.g. only -json requested), we assume we DO need an image for atlas generation?
+            // Actually, MSDF gen ALWAYS creates an image. We probably should save it.
+            // But if user ONLY requested JSON? Maybe they want the metrics only? 
+            // The msdf-atlas-gen typically generates image.
+            // Let's ensure imageOut is set if we are running generator.
+            if (imageOut == null) 
+            {
+                 imageOut = ResolveOutputPath("", $"{fontName}.png", FntFolder);
+            }
+
+
+            string? jsonOut = null;
+            if (_config.JsonOutRequested)
+            {
+                jsonOut = ResolveOutputPath(_config.JsonOut, $"{fontName}.json", JsonFolder);
+            }
+            else if (autoGenerateOutputs)
+            {
+                jsonOut = ResolveOutputPath("", $"{fontName}.json", JsonFolder);
+            }
+            
+            string? csvOut = null;
+            if (_config.CsvOutRequested)
+            {
+                csvOut = ResolveOutputPath(_config.CsvOut, $"{fontName}.csv", JsonFolder);
+            }
+
+            string? fntOut = null;
+            if (_config.GenerateFnt)
+            {
+                fntOut = string.IsNullOrEmpty(_config.FntOut)
+                    ? ResolveOutputPath("", $"{fontName}.fnt", FntFolder)
+                    : ResolveOutputPath(_config.FntOut, null, FntFolder);
+            }
 
             // 3. Load Charset
             Charset charset = LoadCharset();
@@ -47,10 +145,6 @@ namespace MsdfAtlasGen.Cli
             // 4. Build FontGeometry
             var fonts = new List<FontGeometry>();
             var fontGeometry = new FontGeometry();
-
-            string fontName = !string.IsNullOrEmpty(_config.FontName)
-                ? _config.FontName
-                : Path.GetFileNameWithoutExtension(_config.FontPath);
 
             fontGeometry.LoadCharset(font, _config.FontScale, charset);
             fontGeometry.SetName(fontName);
@@ -162,21 +256,62 @@ namespace MsdfAtlasGen.Cli
                 CsvExporter.Export(fonts.ToArray(), width, height, _config.YOrigin, csvOut);
             }
 
+            if (fntOut != null)
+            {
+                Console.WriteLine($"Saving FNT to: {fntOut}");
+                double distanceRange = _config.PxRange.Upper - _config.PxRange.Lower;
+                FntExporter.Export(
+                    fonts.ToArray(),
+                    _config.Type,
+                    width,
+                    height,
+                    _config.Size,
+                    distanceRange,
+                    imageOut,
+                    fntOut,
+                    _config.YOrigin
+                );
+            }
+
+            // 9. Test Render (optional)
+            if (_config.TestRender)
+            {
+                string testRenderOut = string.IsNullOrEmpty(_config.TestRenderFile)
+                    ? ResolveOutputPath("", $"{fontName}_render.png", RenderFolder)
+                    : ResolveOutputPath(_config.TestRenderFile, null, RenderFolder);
+                
+                Console.WriteLine($"Rendering test image to: {testRenderOut}");
+                RenderTestImage(generator.AtlasStorage.Bitmap, testRenderOut);
+            }
+
             Console.WriteLine("Done.");
             return 0;
         }
 
-        private string ResolveOutputPath(string path, string? defaultName)
+        private void RenderTestImage(Bitmap<float> msdfAtlas, string outputPath)
+        {
+            var renderOutput = new Bitmap<float>(_config.TestRenderWidth, _config.TestRenderHeight, 3);
+            var renderRange = new Msdfgen.Range(_config.PxRange.Upper - _config.PxRange.Lower);
+
+            if (_config.Type == ImageType.Msdf || _config.Type == ImageType.Mtsdf)
+                SdfRenderer.RenderMSDF(renderOutput, msdfAtlas, renderRange);
+            else
+                SdfRenderer.RenderSDF(renderOutput, msdfAtlas, renderRange);
+
+            AtlasSaver.SaveAtlas(renderOutput, outputPath);
+        }
+
+        private string ResolveOutputPath(string path, string? defaultName, string defaultFolder)
         {
             if (string.IsNullOrEmpty(path) && defaultName != null)
             {
                 path = defaultName;
             }
 
-            // If path is just a filename (no directory), put it in output folder
-            if (!Path.IsPathRooted(path) && !path.Contains(Path.DirectorySeparatorChar) && !path.Contains('/'))
+            // If path is just a filename (no directory), put it in the specified folder
+            if (!string.IsNullOrEmpty(path) && !Path.IsPathRooted(path) && !path.Contains(Path.DirectorySeparatorChar) && !path.Contains('/'))
             {
-                path = Path.Combine(OutputFolder, path);
+                path = Path.Combine(defaultFolder, path);
             }
 
             // Ensure the directory exists
@@ -194,10 +329,14 @@ namespace MsdfAtlasGen.Cli
             if (!string.IsNullOrEmpty(_config.InlineChars))
             {
                 var charset = new Charset();
+                int duplicates = 0;
                 foreach (char c in _config.InlineChars)
                 {
-                    charset.Add(c);
+                    if (!charset.Add(c))
+                        duplicates++;
                 }
+                if (duplicates > 0)
+                    Console.WriteLine($"Ignored {duplicates} duplicate characters in inline charset.");
                 return charset;
             }
 
@@ -206,11 +345,17 @@ namespace MsdfAtlasGen.Cli
                 // Simple charset parser - just read characters from file
                 var charset = new Charset();
                 string content = File.ReadAllText(_config.CharsetPath);
+                int duplicates = 0;
                 foreach (char c in content)
                 {
                     if (!char.IsControl(c))
-                        charset.Add(c);
+                    {
+                        if (!charset.Add(c))
+                            duplicates++;
+                    }
                 }
+                if (duplicates > 0)
+                    Console.WriteLine($"Ignored {duplicates} duplicate characters in charset file.");
                 return charset;
             }
 

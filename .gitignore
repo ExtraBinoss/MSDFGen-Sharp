@@ -27,3 +27,4 @@ MsdfAtlasGen/obj/**
 # MsdfAtlasGen.Cli
 MsdfAtlasGen.Cli/bin/**
 MsdfAtlasGen.Cli/obj/**
+MsdfAtlasGen.Cli/output/**

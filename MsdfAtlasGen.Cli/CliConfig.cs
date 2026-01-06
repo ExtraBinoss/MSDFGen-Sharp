@@ -31,8 +31,13 @@ namespace MsdfAtlasGen.Cli
 
         // Outputs
         public string ImageOut { get; set; } = string.Empty;
+        public bool ImageOutRequested { get; set; } = false;
         public string JsonOut { get; set; } = string.Empty;
+        public bool JsonOutRequested { get; set; } = false;
         public string CsvOut { get; set; } = string.Empty;
+        public bool CsvOutRequested { get; set; } = false;
+        public string FntOut { get; set; } = string.Empty;
+        public bool GenerateFnt { get; set; } = false;
 
         // Glyph configuration
         public double Size { get; set; } = 32.0;
@@ -57,6 +62,12 @@ namespace MsdfAtlasGen.Cli
 
         // Kerning
         public bool Kerning { get; set; } = true;
+
+        // Test Render
+        public bool TestRender { get; set; } = false;
+        public string TestRenderFile { get; set; } = string.Empty;
+        public int TestRenderWidth { get; set; } = 512;
+        public int TestRenderHeight { get; set; } = 512;
 
         public bool IsValid => !string.IsNullOrEmpty(FontPath);
     }

@@ -21,9 +21,9 @@ namespace MsdfAtlasGen
             return ascii;
         }
 
-        public void Add(uint cp)
+        public bool Add(uint cp)
         {
-            _codepoints.Add(cp);
+            return _codepoints.Add(cp);
         }
 
         public void Remove(uint cp)

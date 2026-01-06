@@ -74,13 +74,33 @@ namespace MsdfAtlasGen.Cli
 
                     // Outputs
                     case "-imageout":
-                        config.ImageOut = args[++i];
+                        config.ImageOutRequested = true;
+                        if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+                        {
+                            config.ImageOut = args[++i];
+                        }
                         break;
                     case "-json":
-                        config.JsonOut = args[++i];
+                        config.JsonOutRequested = true;
+                        if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+                        {
+                            config.JsonOut = args[++i];
+                        }
                         break;
                     case "-csv":
-                        config.CsvOut = args[++i];
+                        config.CsvOutRequested = true;
+                        if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+                        {
+                            config.CsvOut = args[++i];
+                        }
+                        break;
+                    case "-fnt":
+                        config.GenerateFnt = true;
+                        // Check if next arg is a path (not starting with -)
+                        if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+                        {
+                            config.FntOut = args[++i];
+                        }
                         break;
 
                     // Glyph configuration
@@ -139,6 +159,20 @@ namespace MsdfAtlasGen.Cli
                     case "-h":
                         PrintHelp();
                         Environment.Exit(0);
+                        break;
+
+                    // Test Render
+                    case "-testrender":
+                        config.TestRender = true;
+                        // Check if next arg is a path (not starting with -)
+                        if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+                        {
+                            config.TestRenderFile = args[++i];
+                        }
+                        break;
+                    case "-testrendersize":
+                        config.TestRenderWidth = int.Parse(args[++i]);
+                        config.TestRenderHeight = int.Parse(args[++i]);
                         break;
                 }
             }
@@ -215,10 +249,18 @@ Atlas Dimensions:
   -square2                      Even square
   -square4                      Square divisible by 4 (default)
 
-Outputs:
-  -imageout <filename>          Output atlas image
-  -json <filename.json>         Output JSON metadata
-  -csv <filename.csv>           Output CSV layout
+Outputs (saved to MsdfAtlasGen.Cli/output/):
+  -imageout <filename>          Output atlas image -> Fnt/ folder
+  -json <filename.json>         Output JSON metadata -> Json/ folder
+  -csv <filename.csv>           Output CSV layout -> Json/ folder
+  -fnt [filename.fnt]           Output BMFont FNT format -> Fnt/ folder (with PNG)
+
+  If no output options are specified, defaults to <fontname>.json in Json/ folder.
+  Using -fnt creates both .fnt and .png in the Fnt/ folder.
+
+Test Render:
+  -testrender [filename]        Render a test image -> Renders/ folder
+  -testrendersize <w> <h>       Test render dimensions (default: 512x512)
 
 Glyph Configuration:
   -size <em size>               Glyph size in pixels per em (default: 32)
