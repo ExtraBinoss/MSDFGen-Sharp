@@ -153,6 +153,9 @@ namespace MsdfAtlasGen.Cli
                     case "-errorcorrection":
                         config.ErrorCorrection = args[++i].ToLower();
                         break;
+                    case "-nokerning":
+                        config.Kerning = false;
+                        break;
 
                     // Packing
                     case "-spacing":

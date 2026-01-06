@@ -1,50 +1,55 @@
 # Msdfgen.Cli
 
-Render single-glyph distance fields (SDF/PSDF/MSDF/MTSDF) directly via FreeType.
+A diagnostic tool designed for high-precision generation of single-glyph Multi-channel Signed Distance Fields. This is ideal for testing specific characters, debugging font geometry, or generating high-resolution vector assets.
 
-## Prerequisites
-- .NET SDK 9.0
-- Test font available at: ../test_fonts/Roboto-Regular.ttf
+## 🚀 Basic Usage
 
-## Modes
-- sdf, psdf, msdf, mtsdf
+Generate an MSDF for the letter 'A' with automatic framing and a test render:
 
-## Quick Start (Run from this folder)
 ```bash
-# Single-glyph MSDF for 'b' with autoframe and test render
-dotnet run -c Release -- msdf -font "../test_fonts/Roboto-Regular.ttf" 'b' -dimensions 128 128 -pxrange 4 -autoframe -testrender
-
-# SDF for 'd' and save to a specific file
-dotnet run -c Release -- sdf -font "../test_fonts/Roboto-Regular.ttf" 'd' -dimensions 128 128 -pxrange 4 -autoframe -o raw_msdf_d.png
-
-# PSDF (single channel) for 'k'
-dotnet run -c Release -- psdf -font "../test_fonts/Roboto-Regular.ttf" 'k' -dimensions 128 128 -pxrange 4 -autoframe -testrender
+dotnet run -c Release -- msdf -font "../test_fonts/Roboto-Regular.ttf" 'A' -dimensions 128 128 -pxrange 4 -autoframe -testrender
 ```
 
-## Useful Options
-```bash
-# Output file
--o output.png
+---
 
-# Output dimensions
--dimensions 128 128
+## 🛠 Command Line Options
 
-# Pixel range (bigger = softer edge)
--pxrange 4
+### 1. Modes
+The first argument must be the generation mode:
+- `msdf`: Multi-channel Signed Distance Field (Recommended)
+- `mtsdf`: Multi-channel and True Signed Distance Field
+- `sdf`: Standard Signed Distance Field
+- `psdf`: Pseudo-Distance Field
 
-# Autoframe to fit glyph inside the image
--autoframe
+### 2. Input
+| Flag | Arguments | Description |
+| :--- | :--- | :--- |
+| `-font` | `<font.ttf> <char>` | Load a specific glyph from a font file. Char can be `'A'`, `0x0041`, or `65`. |
+| `-shapedesc` | `<file.txt>` | Load a shape description from a file. |
+| `-defineshape` | `"<desc>"` | Define a shape directly in the command line using msdfgen syntax. |
 
-# Render a preview image of the distance field
--testrender [render.png] [W H]
+### 3. Output & Dimensions
+| Flag | Arguments | Description |
+| :--- | :--- | :--- |
+| `-o` | `<filename.png>` | Sets the output image filename. |
+| `-dimensions` | `<w> <h>` | Sets the output image dimensions in pixels. |
+| `-pxrange` | `<value>` | Sets the distance field range in pixels. |
+| `-scale` | `<s>` | Manually set the glyph scale. |
+| `-translate` | `<x> <y>` | Manually set the glyph translation. |
+| `-autoframe` | *(None)* | Automatically centers and scales the glyph to fit the dimensions. |
 
-# Corner angle threshold (degrees: append D)
--angle 30D
+### 4. Diagnostics & Verification
+| Flag | Arguments | Description |
+| :--- | :--- | :--- |
+| `-testrender` | `[file] [w] [h]` | Performs a software render of the generated DF to verify quality. |
+| `-angle` | `<val>` | Corner detection threshold (e.g., `3.0` or `30D`). |
+| `-printmetrics` | *(None)* | Prints detailed glyph bounding box and advance metrics to console. |
+| `-exportshape` | `<file.txt>` | Exports the interpreted vector shape to a text file. |
 
-# Print metrics and configuration
--printmetrics
-```
+---
 
-## Output Locations
-- Raw MSDF: Msdfgen.Cli/RawMsdf/
-- Rendered views: Msdfgen.Cli/Render/
+## 🔍 When to use this tool?
+While `MsdfAtlasGen.Cli` is great for making font sheets, `Msdfgen.Cli` is better for:
+1. **Debugging "Quirks"**: If a character looks wrong in an atlas, test it here in isolation.
+2. **High-Res Assets**: Generating a 512x512 MSDF for a single logo or icon.
+3. **Shape Testing**: Testing manual shape definitions without using a font file.
