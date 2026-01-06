@@ -10,7 +10,7 @@ The primary tool for generating font atlases in Multi-channel Signed Distance Fi
 Generate a 1024x1024 atlas for the Roboto font with BMFont outputs and a test render:
 
 ```bash
-dotnet run -c Release -- -font "../test_fonts/Roboto-Regular.ttf" -size 90 -dimensions 1024 1024 -fnt -testrender -spacing 2 -miterlimit 3.0 -coloringstrategy simple -errorcorrection indiscriminate
+dotnet run -c Release -- -font "../assets/test_fonts/Roboto-Regular.ttf" -size 90 -dimensions 1024 1024 -fnt -testrender -spacing 2 -miterlimit 3.0 -coloringstrategy simple -errorcorrection indiscriminate
 ```
 
 ---

@@ -17,7 +17,7 @@ using Msdfgen;
 using Msdfgen.Extensions;
 
 using var ft = FreetypeHandle.Initialize();
-using var font = FontHandle.LoadFont(ft, "../test_fonts/Roboto-Regular.ttf");
+using var font = FontHandle.LoadFont(ft, "../assets/test_fonts/Roboto-Regular.ttf");
 
 FontLoader.GetFontMetrics(out var metrics, font);
 var shape = new Shape();

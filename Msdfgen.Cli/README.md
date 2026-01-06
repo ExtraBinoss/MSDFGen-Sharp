@@ -7,7 +7,7 @@ A diagnostic tool designed for high-precision generation of single-glyph Multi-c
 Generate an MSDF for the letter 'A' with automatic framing and a test render:
 
 ```bash
-dotnet run -c Release -- msdf -font "../test_fonts/Roboto-Regular.ttf" 'A' -dimensions 128 128 -pxrange 4 -autoframe -testrender
+dotnet run -c Release -- msdf -font "../assets/test_fonts/Roboto-Regular.ttf" 'A' -dimensions 128 128 -pxrange 4 -autoframe -testrender
 ```
 
 ---
