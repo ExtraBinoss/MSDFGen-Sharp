@@ -20,7 +20,8 @@ namespace MsdfAtlasGen
             double distanceRange,
             string pngFilename,
             string outputFilename,
-            YAxisOrientation yDirection = YAxisOrientation.Downward)
+            YAxisOrientation yDirection = YAxisOrientation.Downward,
+            Padding? outerPixelPadding = null)
         {
             if (fonts.Length == 0) return;
 
@@ -52,7 +53,21 @@ namespace MsdfAtlasGen
             writer.WriteAttributeString("smooth", "1");
             writer.WriteAttributeString("aa", "1");
             // Padding in FNT is the atlas padding used during generation
-            int infoPadding = (int)(distanceRange / 2.0) + 2; // Range/2 + outer padding
+            int infoPadding;
+            if (outerPixelPadding.HasValue)
+            {
+                // Use the outer pixel padding that was applied
+                Padding pad = outerPixelPadding.Value;
+                int padL = (int)pad.L;
+                int padR = (int)pad.R;
+                int padT = (int)pad.T;
+                int padB = (int)pad.B;
+                infoPadding = (padL + padR + padT + padB) / 4; // Average of all sides
+            }
+            else
+            {
+                infoPadding = (int)(distanceRange / 2.0) + 2; // Fallback: Range/2 + outer padding
+            }
             writer.WriteAttributeString("padding", $"{infoPadding},{infoPadding},{infoPadding},{infoPadding}");
             writer.WriteAttributeString("spacing", "0,0");
             writer.WriteAttributeString("outline", "0");
@@ -132,14 +147,16 @@ namespace MsdfAtlasGen
                 // yoffset: offset from baseline to top of glyph
                 // xadvance: horizontal advance (distance to move cursor after rendering)
                 
-                // pl, pb, pr, pt are in scaled EM units (EM * geometryScale) from GetQuadPlaneBounds
-                // metrics values are also scaled (EM * geometryScale) from FontGeometry.LoadMetrics
-                // After scaling, EmSize becomes 1.0, so we just need fontSize to convert to final pixels
+                // pl, pb, pr, pt are in scaled EM units from GetQuadPlaneBounds
+                // metrics values are also scaled from FontGeometry.LoadMetrics
+                // After scaling, EmSize becomes 1.0
                 
-                // Convert from scaled EM units to pixels
-                // scaled units are equivalent to pixels at fontSize size
+                // xoffset and yoffset are already in the right scale
                 int xoffset = (int)Math.Round(pl);
                 int yoffset = (int)Math.Round(metrics.AscenderY - pt);
+                
+                // xadvance: GetAdvance() returns scaled EM units (1 unit = 1 pixel at fontSize)
+                // Since metrics.EmSize is 1.0 after scaling, we just round it
                 int xadvance = (int)Math.Round(glyph.GetAdvance());
 
                 writer.WriteStartElement("char");

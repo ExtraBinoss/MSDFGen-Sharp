@@ -288,7 +288,8 @@ namespace MsdfAtlasGen.Cli
                     distanceRange,
                     imageOut,
                     fntOut,
-                    _config.YOrigin
+                    _config.YOrigin,
+                    _config.OuterPxPadding
                 );
             }
 
