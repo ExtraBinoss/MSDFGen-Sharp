@@ -19,3 +19,11 @@ Msdfgen.Core/obj/**
 # Msdfgen.Extensions
 Msdfgen.Extensions/bin/**
 Msdfgen.Extensions/obj/**
+
+# MsdfAtlasGen
+MsdfAtlasGen/bin/**
+MsdfAtlasGen/obj/**
+
+# MsdfAtlasGen.Cli
+MsdfAtlasGen.Cli/bin/**
+MsdfAtlasGen.Cli/obj/**

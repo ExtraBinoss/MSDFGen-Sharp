@@ -31,5 +31,19 @@ namespace Msdfgen
         {
             return new Range(range.Lower / divisor, range.Upper / divisor);
         }
+        public static Range operator +(Range range, double value)
+        {
+            return new Range(range.Lower + value, range.Upper + value);
+        }
+
+        public static Range operator +(double value, Range range)
+        {
+            return range + value;
+        }
+
+        public static Range operator +(Range a, Range b)
+        {
+            return new Range(a.Lower + b.Lower, a.Upper + b.Upper);
+        }
     }
 }
