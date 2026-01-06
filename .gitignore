@@ -4,3 +4,8 @@
 *.pdb
 *.bin
 *.obj
+
+# Msdfgen.Cli
+Msdfgen.Cli/RawMsdf/**
+Msdfgen.Cli/Render/**
+Msdfgen.Cli/ExceptedOutput/**

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Msdfgen.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4c80927bd3045f37d6b28e7ad7ec58fb683cf440")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ed9ba34d2832b797fe23dfcaa9c35d2603615a03")]
 [assembly: System.Reflection.AssemblyProductAttribute("Msdfgen.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Msdfgen.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
