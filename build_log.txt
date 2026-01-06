@@ -1,0 +1,26 @@
+  Identification des projets à restaurer...
+  Tous les projets sont à jour pour la restauration.
+  Msdfgen.Core -> C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Core\bin\Debug\net9.0\Msdfgen.Core.dll
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\FontLoader.cs(13,30): error CS1061: 'Font' ne contient pas de définition pour 'GetGlyph' et aucune méthode d'extension accessible 'GetGlyph' acceptant un premier argument de type 'Font' n'a été trouvée (une directive using ou une référence d'assembly est-elle manquante ?) [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\FontLoader.cs(26,26): error CS0117: 'TextRenderer' ne contient pas de définition pour 'Render' [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\FontLoader.cs(20,17): warning CS0219: La variable 'dpi' est assignée, mais sa valeur n'est jamais utilisée [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\FontLoader.cs(38,20): warning CS8618: Le champ « _currentContour » non-nullable doit contenir une valeur autre que Null lors de la fermeture du constructeur. Envisagez d’ajouter le modificateur « required » ou de déclarer le champ comme pouvant accepter la valeur Null. [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\ImageSaver.cs(25,31): warning CS0168: La variable 'r' est déclarée, mais jamais utilisée [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\ImageSaver.cs(25,34): warning CS0168: La variable 'g' est déclarée, mais jamais utilisée [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\ImageSaver.cs(25,37): warning CS0168: La variable 'b' est déclarée, mais jamais utilisée [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\ImageSaver.cs(25,40): warning CS0168: La variable 'a' est déclarée, mais jamais utilisée [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+
+ÉCHEC de la build.
+
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\FontLoader.cs(20,17): warning CS0219: La variable 'dpi' est assignée, mais sa valeur n'est jamais utilisée [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\FontLoader.cs(38,20): warning CS8618: Le champ « _currentContour » non-nullable doit contenir une valeur autre que Null lors de la fermeture du constructeur. Envisagez d’ajouter le modificateur « required » ou de déclarer le champ comme pouvant accepter la valeur Null. [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\ImageSaver.cs(25,31): warning CS0168: La variable 'r' est déclarée, mais jamais utilisée [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\ImageSaver.cs(25,34): warning CS0168: La variable 'g' est déclarée, mais jamais utilisée [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\ImageSaver.cs(25,37): warning CS0168: La variable 'b' est déclarée, mais jamais utilisée [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\ImageSaver.cs(25,40): warning CS0168: La variable 'a' est déclarée, mais jamais utilisée [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\FontLoader.cs(13,30): error CS1061: 'Font' ne contient pas de définition pour 'GetGlyph' et aucune méthode d'extension accessible 'GetGlyph' acceptant un premier argument de type 'Font' n'a été trouvée (une directive using ou une référence d'assembly est-elle manquante ?) [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\FontLoader.cs(26,26): error CS0117: 'TextRenderer' ne contient pas de définition pour 'Render' [C:\Users\binos\Documents\Personal_project\MSDFGen-Sharp\Msdfgen.Extensions\Msdfgen.Extensions.csproj]
+    6 Avertissement(s)
+    2 Erreur(s)
+
+Temps écoulé 00:00:01.96

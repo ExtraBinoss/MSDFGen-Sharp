@@ -10,20 +10,10 @@ namespace Msdfgen.Extensions
     {
         public static Shape LoadShape(Font font, char character)
         {
-            var glyph = font.GetGlyph(character);
             var shape = new Shape();
-            
-            // SixLabors.Fonts exposes the path via a simpler API in recent versions (GetGlyph().Instance.Path or via renderer)
-            // But usually we need to implement IGlyphRenderer to capture the moves.
-            
             var renderer = new ShapeRenderer(shape);
-            var dpi = 72; // DPI doesn't strictly matter for shape extraction as we normalize/scale, but 72 is standard.
             
-            // We need to check exact API for rendering a specific glyph.
-            // GlyphInstance has Render method.
-            
-            var glyphInstance = glyph.Instance;
-            TextRenderer.Render(renderer, character.ToString(), new TextOptions(font));
+            TextRenderer.RenderTextTo(renderer, character.ToString(), new TextOptions(font));
 
             return shape;
         }
@@ -38,12 +28,13 @@ namespace Msdfgen.Extensions
             public ShapeRenderer(Shape shape)
             {
                 _shape = shape;
+                _currentContour = new Contour(); // Placeholder, re-assigned in BeginFigure
             }
 
-            public void BeginText(FontRectangle rect) { }
+            public void BeginText(in FontRectangle rect) { }
             public void EndText() { }
             
-            public bool BeginGlyph(FontRectangle rect, GlyphRendererParameters parameters) 
+            public bool BeginGlyph(in FontRectangle rect, in GlyphRendererParameters parameters) 
             {
                 // We could use this to init, but for single char it's fine.
                 return true; 
@@ -90,6 +81,11 @@ namespace Msdfgen.Extensions
             public void SetDecoration(TextDecorations decorations, System.Numerics.Vector2 start, System.Numerics.Vector2 end, float thickness)
             {
                 // Ignore decorations
+            }
+
+            public TextDecorations EnabledDecorations() 
+            {
+                return TextDecorations.None;
             }
             
             private static Msdfgen.Vector2 ToVector2(System.Numerics.Vector2 v)

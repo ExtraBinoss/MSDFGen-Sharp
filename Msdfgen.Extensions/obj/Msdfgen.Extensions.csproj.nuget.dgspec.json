@@ -1,7 +1,7 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj": {}
+    "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj": {}
   },
   "projects": {
     "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Core\\Msdfgen.Core.csproj": {
@@ -63,14 +63,14 @@
         }
       }
     },
-    "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj": {
+    "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj",
+        "projectUniqueName": "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj",
         "projectName": "Msdfgen.Extensions",
-        "projectPath": "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj",
+        "projectPath": "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\Msdfgen.Extensions.csproj",
         "packagesPath": "C:\\Users\\binos\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\obj\\",
+        "outputPath": "c:\\Users\\binos\\Documents\\Personal_project\\MSDFGen-Sharp\\Msdfgen.Extensions\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\binos\\AppData\\Roaming\\NuGet\\NuGet.Config"

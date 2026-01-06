@@ -53,10 +53,11 @@ namespace Msdfgen.Cli
             // Options
             string outputFile = "output.png";
             int width = 64, height = 64;
-            double pxRange = 4.0;
+            double pxRange = 2.0;  // C++ default is 2
             Vector2 scale = new Vector2(1.0, 1.0);
             Vector2 translate = new Vector2(0.0, 0.0);
             bool autoFrame = false;
+            bool scaleSpecified = false;
             double angleThreshold = 3.0;
             string exportShapeFile = null;
             string testRenderFile = null;
@@ -99,13 +100,9 @@ namespace Msdfgen.Cli
                          pxRange = double.Parse(args[argPos++]);
                         break;
                     case "-scale":
-                        scale = new Vector2(double.Parse(args[argPos++]), double.Parse(args[argPos++])); // Handle single argument too? C++ accepts 1 or 2. We'll assume strict 2 for now based on snippet "scale <scale>". Wait, C++ usually allows 1 arg for uniform.
-                        // Let's assume uniform if next arg starts with -? Or just assume uniform for simplicity if parsing fails? 
-                        // The user snippet says "-scale <scale>", singular. So uniform.
-                        // But example in C++ might be Vector2.
-                        // Let's revisit: "-scale <scale>" usually means uniform. "-scale <x> <y>" if non-uniform.
-                        // We will implement uniform for safety as per snippet doc "scale <scale>".
-                        // Wait, looking at args parsing logic is best. Let's assume uniform for now, or check next arg.
+                        double s = double.Parse(args[argPos++]);
+                        scale = new Vector2(s, s); // C++ uses single value for uniform scale
+                        scaleSpecified = true;
                         break;
                     case "-translate":
                         translate = new Vector2(double.Parse(args[argPos++]), double.Parse(args[argPos++]));
@@ -157,24 +154,63 @@ namespace Msdfgen.Cli
             if (!shape.Validate())
                  Console.WriteLine("Shape validation failed.");
 
+            // Orient contours to fix winding order (important for correct SDF signs)
+            shape.OrientContours();
             shape.Normalize();
-            // Y-up by default in MSDFGen? 
-            // Check Y-axis. C++ origin is bottom-left. SixLabors is top-left.
-            // If FontLoader didn't flip, we might need to.
-            // Let's assume FontLoader passed raw data.
+
+            // C++: If no scale specified and mode is not metrics, autoframe is commonly expected for usable output
+            // Enable autoframe if no scale specified explicitly
+            if (!scaleSpecified && !autoFrame)
+            {
+                autoFrame = true; // Auto-enable for sensible defaults
+            }
 
             if (autoFrame)
             {
                 // Implement autoframe logic: Calculate bounds, center, scale to fit.
-                double l = 0, b = 0, r = 0, t = 0;
+                double l = 1e240, b = 1e240, r = -1e240, t = -1e240;
                 shape.Bound(ref l, ref b, ref r, ref t);
-                double frameW = width - 2 * pxRange;
-                double frameH = height - 2 * pxRange;
-                if (frameW > 0 && frameH > 0)
+                
+                if (l >= r || b >= t)
                 {
-                    double s = Math.Min(frameW / (r - l), frameH / (t - b));
-                    scale = new Vector2(s, s);
-                    translate = new Vector2(-l + (frameW / s - (r - l)) / 2 + pxRange / s, -b + (frameH / s - (t - b)) / 2 + pxRange / s);
+                    // Empty or invalid bounds, use fallback
+                    l = 0; b = 0; r = 1; t = 1;
+                }
+                
+                // C++ logic for autoframe with pxRange
+                Vector2 frame = new Vector2(width, height);
+                frame = new Vector2(frame.X + 2 * (-pxRange / 2), frame.Y + 2 * (-pxRange / 2)); // frame += 2*pxRange.lower (lower = -pxRange/2)
+                
+                if (frame.X <= 0 || frame.Y <= 0)
+                {
+                    Console.WriteLine("Cannot fit the specified pixel range.");
+                    return;
+                }
+                
+                Vector2 dims = new Vector2(r - l, t - b);
+                
+                if (!scaleSpecified)
+                {
+                    if (dims.X * frame.Y < dims.Y * frame.X)
+                    {
+                        // Height-constrained
+                        double fitScale = frame.Y / dims.Y;
+                        translate = new Vector2(0.5 * (frame.X / frame.Y * dims.Y - dims.X) - l, -b);
+                        scale = new Vector2(fitScale, fitScale);
+                    }
+                    else
+                    {
+                        // Width-constrained
+                        double fitScale = frame.X / dims.X;
+                        translate = new Vector2(-l, 0.5 * (frame.Y / frame.X * dims.X - dims.Y) - b);
+                        scale = new Vector2(fitScale, fitScale);
+                    }
+                    // Offset for pxRange (pxRange.lower = -pxRange/2)
+                    translate = new Vector2(translate.X - (-pxRange / 2) / scale.X, translate.Y - (-pxRange / 2) / scale.Y);
+                }
+                else
+                {
+                    translate = new Vector2(0.5 * (frame.X / scale.X - dims.X) - l, 0.5 * (frame.Y / scale.Y - dims.Y) - b);
                 }
             }
 
