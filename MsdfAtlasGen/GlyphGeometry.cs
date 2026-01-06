@@ -57,19 +57,26 @@ namespace MsdfAtlasGen
             _shape = Msdfgen.Extensions.FontLoader.LoadShape(font, character);
             if (_shape != null && _shape.Validate())
             {
-                _index = 0; // We don't easily get index from char without more logic, placeholder
                 _codepoint = character;
                 _geometryScale = geometryScale;
 
-                // Derive target pixel font size from geometryScale (fontSize / unitsPerEm)
-                double unitsPerEm = font.FontMetrics.UnitsPerEm;
-                double fontSizePixels = geometryScale * unitsPerEm;
-
-                // Measure advance using a unit-sized font and scale to target size
-                var unitFont = new Font(font.Family, 1);
-                var advanceRect = TextMeasurer.MeasureAdvance(character.ToString(), new TextOptions(unitFont));
-                _advanceUnscaled = advanceRect.Width * fontSizePixels;
-                _advance = _advanceUnscaled;
+                // Resolve glyph index and advance directly from SixLabors metrics
+                var cp = new SixLabors.Fonts.Unicode.CodePoint(character);
+                var fm = font.FontMetrics;
+                if (fm.TryGetGlyphMetrics(cp, TextAttributes.None, TextDecorations.None, LayoutMode.HorizontalTopBottom, ColorFontSupport.None, out var metricsList) && metricsList.Count > 0)
+                {
+                    var gm = metricsList[0];
+                    _index = (int)gm.GlyphId;
+                    // AdvanceWidth is in font design units; convert to pixels using geometryScale (size / unitsPerEm)
+                    _advanceUnscaled = gm.AdvanceWidth * _geometryScale;
+                    _advance = _advanceUnscaled;
+                }
+                else
+                {
+                    _index = 0;
+                    _advanceUnscaled = 0;
+                    _advance = 0;
+                }
 
                 if (preprocessGeometry)
                 {
