@@ -55,7 +55,10 @@ namespace MsdfAtlasGen.Cli
 
         public int Run()
         {
+            PrintConfiguration();
+
             // 1. Load font via FreeType
+            Console.WriteLine("[PHASE] Loading FreeType and Font...");
             using var ft = FreetypeHandle.Initialize();
             if (ft == null)
             {
@@ -142,6 +145,7 @@ namespace MsdfAtlasGen.Cli
             }
 
             // 3. Load Charset
+            Console.WriteLine("[PHASE] Loading Charset and Metrics...");
             Charset charset = LoadCharset();
 
             // 4. Build FontGeometry
@@ -162,6 +166,7 @@ namespace MsdfAtlasGen.Cli
             fonts.Add(fontGeometry);
 
             // 6. Pack
+            Console.WriteLine("[PHASE] Packing Glyphs...");
             var glyphs = fontGeometry.GetGlyphs().Glyphs.ToArray();
 
             var packer = new TightAtlasPacker();
@@ -202,7 +207,10 @@ namespace MsdfAtlasGen.Cli
             // 7. Generate MSDF atlas
             int width, height;
             packer.GetDimensions(out width, out height);
-            
+            Console.WriteLine($"  Atlas dimensions: {width} x {height}");
+
+            // 7. Generate MSDF atlas
+            Console.WriteLine("[PHASE] Generating Atlas Pixels...");
             var generatorAttributes = new GeneratorAttributes
             {
                 Config = new MSDFGeneratorConfig(_config.Overlap, GetErrorCorrectionConfig()),
@@ -241,7 +249,7 @@ namespace MsdfAtlasGen.Cli
             generator.SetAttributes(generatorAttributes);
             generator.SetThreadCount(threadCount);
 
-            Console.WriteLine($"Generation: {_config.Threads} threads used");
+            Console.WriteLine($"Generation: {threadCount} threads used");
             var progress = new Progress<double>(percent =>
             {
                 // Simple textual progress bar
@@ -253,6 +261,7 @@ namespace MsdfAtlasGen.Cli
             Console.WriteLine(); // Newline after completion
 
             // 8. Save outputs
+            Console.WriteLine("[PHASE] Saving Outputs...");
             Console.WriteLine($"Saving image to: {imageOut}");
             AtlasSaver.SaveAtlas(generator.AtlasStorage.Bitmap, imageOut);
 
@@ -516,6 +525,33 @@ namespace MsdfAtlasGen.Cli
                     break;
             }
             return new ErrorCorrectionConfig(mode, distanceCheck);
+        }
+
+        private void PrintConfiguration()
+        {
+            Console.WriteLine("-------------------------------------------------------------------------------");
+            Console.WriteLine(" MSDF Atlas Gen Configuration");
+            Console.WriteLine("-------------------------------------------------------------------------------");
+            Console.WriteLine($"  Font Path:        {_config.FontPath}");
+            Console.WriteLine($"  Font Name:        {_config.FontName ?? "Auto"}");
+            Console.WriteLine($"  Charset:          {(!string.IsNullOrEmpty(_config.InlineChars) ? "Inline Content" : (string.IsNullOrEmpty(_config.CharsetPath) ? "ASCII (Default)" : _config.CharsetPath))}");
+            Console.WriteLine($"  Atlas Type:       {_config.Type}");
+            Console.WriteLine($"  Output Format:    {_config.Format}");
+            Console.WriteLine($"  Glyph Size:       {_config.Size} pt");
+            Console.WriteLine($"  Pixel Range:      {_config.PxRange.Lower} to {_config.PxRange.Upper}");
+            Console.WriteLine($"  Miter Limit:      {_config.MiterLimit}");
+            Console.WriteLine($"  Overlap Support:  {_config.Overlap}");
+            Console.WriteLine($"  Error Correction: {_config.ErrorCorrection}");
+            Console.WriteLine($"  Color Strategy:   {_config.ColoringStrategy}");
+            Console.WriteLine($"  Angle Threshold:  {_config.AngleThreshold}");
+            Console.WriteLine($"  Dimensions:       {(_config.Width > 0 ? _config.Width.ToString() : "Auto")} x {(_config.Height > 0 ? _config.Height.ToString() : "Auto")}");
+            Console.WriteLine($"  Packing Spacing:  {_config.Spacing} px");
+            Console.WriteLine($"  Padding (Outer):  L:{_config.OuterPxPadding.L} B:{_config.OuterPxPadding.B} R:{_config.OuterPxPadding.R} T:{_config.OuterPxPadding.T}");
+            Console.WriteLine($"  Y-Origin:         {_config.YOrigin}");
+            Console.WriteLine($"  Thread Count:     {(_config.Threads == 0 ? $"Auto ({Environment.ProcessorCount})" : _config.Threads)}");
+            Console.WriteLine($"  Scanline Pass:    {_config.Scanline}");
+            Console.WriteLine($"  Test Render:      {_config.TestRender}");
+            Console.WriteLine("-------------------------------------------------------------------------------");
         }
     }
 }

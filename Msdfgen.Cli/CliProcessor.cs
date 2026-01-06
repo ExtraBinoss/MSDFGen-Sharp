@@ -10,7 +10,10 @@ namespace Msdfgen.Cli
     {
         public void Process(CliOptions options)
         {
+            PrintConfiguration(options);
+
             // 1. Load Shape
+            Console.WriteLine("[PHASE] Loading Glyph Geometry...");
             Shape? shape = LoadShape(options);
             if (shape == null) return;
 
@@ -40,10 +43,12 @@ namespace Msdfgen.Cli
                 PrintMetrics(shape, options);
 
             // 6. Generate
+            Console.WriteLine("[PHASE] Generating MSDF Pixels...");
             Bitmap<float> output = Generate(shape, options);
 
             // 7. Save
-            Console.WriteLine($"Saving to {options.OutputFile}...");
+            Console.WriteLine("[PHASE] Saving Result...");
+            Console.WriteLine($"  Saving to {options.OutputFile}...");
             ImageSaver.Save(output, options.OutputFile);
 
             // 8. Test Render
@@ -297,6 +302,23 @@ namespace Msdfgen.Cli
                  
              if (!string.IsNullOrEmpty(options.TestRenderFile))
                  ImageSaver.Save(renderOutput, options.TestRenderFile!);
+        }
+
+        private static void PrintConfiguration(CliOptions options)
+        {
+            Console.WriteLine("-------------------------------------------------------------------------------");
+            Console.WriteLine(" MSDF Generator Configuration (Single Glyph)");
+            Console.WriteLine("-------------------------------------------------------------------------------");
+            Console.WriteLine($"  Font File:        {options.FontFile}");
+            Console.WriteLine($"  Character:        U+{(int)options.CharCode:X4} ({options.CharCode})");
+            Console.WriteLine($"  Mode:             {options.Mode}");
+            Console.WriteLine($"  Width x Height:   {options.Width} x {options.Height}");
+            Console.WriteLine($"  Pixel Range:      {options.PxRange}");
+            Console.WriteLine($"  Angle Threshold:  {options.AngleThreshold}");
+            Console.WriteLine($"  AutoFrame:        {options.AutoFrame}");
+            Console.WriteLine($"  Output File:      {options.OutputFile}");
+            Console.WriteLine($"  Test Render:      {(options.TestRenderFile ?? "Disabled")}");
+            Console.WriteLine("-------------------------------------------------------------------------------");
         }
     }
 }

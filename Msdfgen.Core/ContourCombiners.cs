@@ -121,13 +121,7 @@ namespace Msdfgen
             dynamic outerDistance = ((dynamic)outerEdgeSelector).Distance();
             double innerScalarDistance = ContourCombinerHelpers.ResolveDistance(innerDistance);
             double outerScalarDistance = ContourCombinerHelpers.ResolveDistance(outerDistance);
-            dynamic distance = default(dynamic); // Will be initialized
-            
-            // Hack to initialize distance since we don't know the type TDistance explicitly here safely without reflection or helper
-            // But we can use the helper with 'ref' if we cast? No.
-            // We can construct a default instance if we knew TDistance. 
-            // We can infer TDistance from shapeDistance.
-            distance = ContourCombinerHelpers.GetInitialDistance(shapeDistance);
+            dynamic distance = ContourCombinerHelpers.GetInitialDistance(shapeDistance);
 
             int winding = 0;
             if (innerScalarDistance >= 0 && Math.Abs(innerScalarDistance) <= Math.Abs(outerScalarDistance))
