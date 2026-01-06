@@ -12,10 +12,16 @@ namespace MsdfAtlasGen
         private const int WorstFit = int.MaxValue;
         private readonly List<Rectangle> _spaces;
 
+        /// <summary>
+        /// Initializes a new rectangle packer with an empty area.
+        /// </summary>
         public RectanglePacker() : this(0, 0)
         {
         }
 
+        /// <summary>
+        /// Initializes a new rectangle packer with a specified initial area.
+        /// </summary>
         public RectanglePacker(int width, int height)
         {
             _spaces = new List<Rectangle>();
@@ -95,6 +101,9 @@ namespace MsdfAtlasGen
             return remainingRects.Count;
         }
 
+        /// <summary>
+        /// Packs an array of oriented rectangles, allowing for 90-degree rotations.
+        /// </summary>
         public int Pack(OrientedRectangle[] rectangles)
         {
             var remainingRects = new List<int>(rectangles.Length);

@@ -13,6 +13,9 @@ namespace MsdfAtlasGen
         public int Width;
         public int Height;
 
+        /// <summary>
+        /// Simple 2D integer coordinate.
+        /// </summary>
         public struct Coordinate
         {
             public int X, Y;

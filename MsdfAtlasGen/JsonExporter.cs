@@ -29,6 +29,9 @@ namespace MsdfAtlasGen
 
     public static class JsonExporter
     {
+        /// <summary>
+        /// Converts the image type enum to its string representation used in the JSON.
+        /// </summary>
         private static string ImageTypeString(ImageType type)
         {
             switch (type)
@@ -43,6 +46,9 @@ namespace MsdfAtlasGen
             }
         }
 
+        /// <summary>
+        /// Exports the font atlas metadata and glyph metrics to a JSON file.
+        /// </summary>
         public static void Export(FontGeometry[] fonts, ImageType imageType, JsonAtlasMetrics metrics, string filename, bool kerning)
         {
             var root = new Dictionary<string, object>();
@@ -118,6 +124,9 @@ namespace MsdfAtlasGen
             File.WriteAllText(filename, json);
         }
 
+        /// <summary>
+        /// Internal helper to create a JSON-compatible object representing a single font.
+        /// </summary>
         private static Dictionary<string, object> CreateFontObject(FontGeometry font, JsonAtlasMetrics metrics, bool kerning)
         {
             var obj = new Dictionary<string, object>();

@@ -12,6 +12,9 @@ namespace MsdfAtlasGen
         }
 
         // Overload for when we want to pass a specific ISizeSelector implementation logic
+        /// <summary>
+        /// Packs rectangles into an area of resolved size based on constraints.
+        /// </summary>
         public static void PackRectangles<TSelector>(Rectangle[] rectangles, int spacing, out int width, out int height) where TSelector : ISizeSelector
         {
             // Since we need to instantiate with minArea, we can't easily use new() constraint if ctor takes args.
@@ -78,6 +81,9 @@ namespace MsdfAtlasGen
         }
 
         // Helper for fixed size packing
+        /// <summary>
+        /// Packs rectangles into a fixed-size area. Returns non-zero if some didn't fit.
+        /// </summary>
         public static int PackRectangles(Rectangle[] rectangles, int width, int height, int spacing)
         {
              if (spacing != 0)

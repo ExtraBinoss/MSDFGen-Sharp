@@ -106,11 +106,17 @@ namespace MsdfAtlasGen
             return false;
         }
 
+        /// <summary>
+        /// Performs edge coloring for the glyph's shape.
+        /// </summary>
         public void EdgeColoring(EdgeColoringDelegate fn, double angleThreshold, ulong seed)
         {
             fn(_shape!, angleThreshold, seed);
         }
 
+        /// <summary>
+        /// Calculates the glyph's bounding box and internal transformation based on the provided attributes.
+        /// </summary>
         public void WrapBox(GlyphAttributes glyphAttributes)
         {
             if (_shape == null || _shape.Contours.Count == 0)
@@ -183,31 +189,82 @@ namespace MsdfAtlasGen
             }
         }
 
+        /// <summary>
+        /// Sets the position of the glyph's box in the atlas.
+        /// </summary>
         public void PlaceBox(int x, int y)
         {
             _box.Rect.X = x;
             _box.Rect.Y = y;
         }
 
+        /// <summary>
+        /// Returns the glyph index.
+        /// </summary>
         public int GetIndex() => _index;
+
+        /// <summary>
+        /// Returns the Unicode codepoint.
+        /// </summary>
         public int GetCodepoint() => _codepoint;
+
+        /// <summary>
+        /// Returns the scale factor.
+        /// </summary>
         public double GetGeometryScale() => _geometryScale;
+
+        /// <summary>
+        /// Returns the loaded vector shape.
+        /// </summary>
         public Shape? GetShape() => _shape;
+
+        /// <summary>
+        /// Returns the shape's original bounds.
+        /// </summary>
         public Shape.Bounds GetShapeBounds() => _bounds;
+
+        /// <summary>
+        /// Returns the glyph's advance in pixels.
+        /// </summary>
         public double GetAdvance() => _advance;
         
+        /// <summary>
+        /// Returns the calculated rectangle for the glyph's box.
+        /// </summary>
         public Rectangle GetBoxRect() => _box.Rect;
+
+        /// <summary>
+        /// Outputs the calculated box rectangle components.
+        /// </summary>
         public void GetBoxRect(out int x, out int y, out int w, out int h)
         {
             x = _box.Rect.X; y = _box.Rect.Y;
             w = _box.Rect.W; h = _box.Rect.H;
         }
         
+        /// <summary>
+        /// Returns the distance field range for the box.
+        /// </summary>
         public Msdfgen.Range GetBoxRange() => _box.Range;
+
+        /// <summary>
+        /// Returns the projection information for the box.
+        /// </summary>
         public Projection GetBoxProjection() => new Projection(new Vector2(_box.Scale, _box.Scale), _box.Translate);
+
+        /// <summary>
+        /// Returns the scale used for the box.
+        /// </summary>
         public double GetBoxScale() => _box.Scale;
+
+        /// <summary>
+        /// Returns the translation used for the box.
+        /// </summary>
         public Vector2 GetBoxTranslate() => _box.Translate;
 
+        /// <summary>
+        /// Returns the bounds of the quad in plane space relative to the glyph origin.
+        /// </summary>
         public void GetQuadPlaneBounds(out double l, out double b, out double r, out double t)
         {
             if (_box.Rect.W > 0 && _box.Rect.H > 0)
@@ -225,6 +282,9 @@ namespace MsdfAtlasGen
             }
         }
 
+        /// <summary>
+        /// Returns the bounds of the glyph box in plane space relative to the glyph origin.
+        /// </summary>
         public void GetBoxPlaneBounds(out double l, out double b, out double r, out double t)
         {
             if (_box.Rect.W > 0 && _box.Rect.H > 0)
@@ -241,6 +301,9 @@ namespace MsdfAtlasGen
             }
         }
 
+        /// <summary>
+        /// Returns the quad's bounds within the atlas texture.
+        /// </summary>
         public void GetQuadAtlasBounds(out double l, out double b, out double r, out double t)
         {
              if (_box.Rect.W > 0 && _box.Rect.H > 0)
@@ -256,29 +319,47 @@ namespace MsdfAtlasGen
             }
         }
 
+        /// <summary>
+        /// Determines if the glyph is whitespace (has no contours).
+        /// </summary>
         public bool IsWhitespace() => _shape?.Contours.Count == 0;
         
+        /// <summary>
+        /// Returns the pixel size of the glyph's box.
+        /// </summary>
         public void GetBoxSize(out int w, out int h)
         {
             w = _box.Rect.W;
             h = _box.Rect.H;
         }
 
+        /// <summary>
+        /// Converts the glyph geometry to a lightweight GlyphBox representation.
+        /// </summary>
         public GlyphBox ToGlyphBox() 
         {
              var box = new GlyphBox();
              box.Index = _index;
              box.Advance = _advance;
-             // GlyphBounds is a struct, access fields directly on the field
              box.Bounds = new GlyphBox.GlyphBounds(); 
              GetQuadPlaneBounds(out box.Bounds.L, out box.Bounds.B, out box.Bounds.R, out box.Bounds.T);
              box.Rect = _box.Rect;
              return box;
         }
 
-        // Accessors for original unscaled metrics (for FNT export)
-        public double GetAdvanceUnscaled() => _advanceUnscaled; // already in pixels at target size
-        public Shape.Bounds GetBoundsUnscaled() => _boundsUnscaled; // font-space (FontSize=1)
-        public Shape.Bounds GetBoundsScaled() => _bounds; // pixel-space at target size
+        /// <summary>
+        /// Returns the unscaled glyph advance.
+        /// </summary>
+        public double GetAdvanceUnscaled() => _advanceUnscaled;
+
+        /// <summary>
+        /// Returns the unscaled shape bounds.
+        /// </summary>
+        public Shape.Bounds GetBoundsUnscaled() => _boundsUnscaled;
+
+        /// <summary>
+        /// Returns the scaled shape bounds.
+        /// </summary>
+        public Shape.Bounds GetBoundsScaled() => _bounds;
     }
 }

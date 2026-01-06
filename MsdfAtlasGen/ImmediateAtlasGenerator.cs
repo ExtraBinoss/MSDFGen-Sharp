@@ -13,6 +13,9 @@ namespace MsdfAtlasGen
         private int _threadCount = 1;
         private readonly GeneratorFunction<T> _generatorFunction;
 
+        /// <summary>
+        /// Initializes a new immediate atlas generator with a generator function.
+        /// </summary>
         public ImmediateAtlasGenerator(GeneratorFunction<T> generatorFunction)
         {
             _generatorFunction = generatorFunction;
@@ -20,6 +23,9 @@ namespace MsdfAtlasGen
             _storage = new BitmapAtlasStorage<T>(0, 0, 3); // Default?
         }
 
+        /// <summary>
+        /// Initializes a new immediate atlas generator with specified dimensions and generator function.
+        /// </summary>
         public ImmediateAtlasGenerator(int width, int height, GeneratorFunction<T> generatorFunction, int channels = 3)
         {
             _generatorFunction = generatorFunction;
@@ -27,22 +33,35 @@ namespace MsdfAtlasGen
             _storage = new BitmapAtlasStorage<T>(width, height, channels);
         }
 
-        // Additional constructors for storage args... 
-        // For simplicity, assuming BitmapAtlasStorage is the storage pattern.
-
+        /// <summary>
+        /// Sets the generator attributes (e.g., range, miter limit).
+        /// </summary>
         public void SetAttributes(GeneratorAttributes attributes)
         {
             _attributes = attributes;
         }
 
+        /// <summary>
+        /// Sets the number of threads to use for parallel generation.
+        /// </summary>
         public void SetThreadCount(int threadCount)
         {
             _threadCount = threadCount;
         }
 
+        /// <summary>
+        /// Returns the underlying atlas storage.
+        /// </summary>
         public BitmapAtlasStorage<T> AtlasStorage => _storage;
+
+        /// <summary>
+        /// Returns the current layout of glyphs in the atlas.
+        /// </summary>
         public List<GlyphBox> GetLayout() => _layout;
 
+        /// <summary>
+        /// Generates the distance field data for the provided glyphs and stores them in the atlas.
+        /// </summary>
         public void Generate(GlyphGeometry[] glyphs, IProgress<double>? progress = null)
         {
             int count = glyphs.Length;
@@ -53,16 +72,10 @@ namespace MsdfAtlasGen
             for (int i = 0; i < count; ++i)
             {
                 var glyph = glyphs[i];
-                var box = glyph.ToGlyphBox(); // Assuming helper I added
+                var box = glyph.ToGlyphBox();
                 _layout.Add(box);
                 maxBoxArea = Math.Max(maxBoxArea, box.Rect.W * box.Rect.H);
             }
-            
-            // Buffer management
-            // C# GC handles small allocations well, but we can reuse if we want.
-            // For now, per-thread allocation is simple.
-            // Or parallel loop with ThreadLocal buffer.
-            
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = _threadCount > 0 ? _threadCount : -1 };
             
             int completed = 0;
@@ -75,8 +88,6 @@ namespace MsdfAtlasGen
                     glyph.GetBoxRect(out int l, out int b, out int w, out int h);
                     if (w > 0 && h > 0)
                     {
-                        // Allocate bitmap for this glyph
-                        // We need to know channels. _storage.Bitmap.Channels
                         var glyphBitmap = new Bitmap<T>(w, h, _storage.Bitmap.Channels);
                         _generatorFunction(glyphBitmap, glyph, _attributes);
                         
@@ -93,6 +104,9 @@ namespace MsdfAtlasGen
             });
         }
         
+        /// <summary>
+        /// Rearranges the glyphs in the atlas based on a remapping.
+        /// </summary>
         public void Rearrange(int width, int height, Remap[] remapping, int count)
         {
              for (int i = 0; i < count; ++i)
@@ -107,20 +121,12 @@ namespace MsdfAtlasGen
              _storage = newStorage;
         }
         
+        /// <summary>
+        /// Resizes the atlas storage to the specified dimensions.
+        /// </summary>
         public void Resize(int width, int height)
         {
-             // Resize usually implies copying existing? Or clearing?
-             // C++ Resize: AtlasStorage newStorage((AtlasStorage &&) storage, width, height);
-             // BitmapAtlasStorage ctor copies/blits.
-             
-             // I'll assume we copy existing content (corner 0,0?)
-             // Actually C++ generic AtlasStorage ctor(orig, w, h) implementation:
-             // blit(bitmap, orig.bitmap, 0, 0, 0, 0, min(w, orig.w), min(h, orig.h));
-             // Similar to 'resize' in image editors (crop/extend).
-             
-             // BitmapAtlasStorage<T> doesn't have that constructor in my C# interface yet.
-             // I only implemented (width, height, channels) and (orig, remapping).
-             // I need to add (orig, width, height) constructor to BitmapAtlasStorage.cs.
+             _storage = new BitmapAtlasStorage<T>(_storage, width, height);
         }
     }
 }

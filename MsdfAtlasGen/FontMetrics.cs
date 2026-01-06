@@ -2,6 +2,9 @@ using System;
 
 namespace MsdfAtlasGen
 {
+    /// <summary>
+    /// Represents font-wide metrics.
+    /// </summary>
     public struct FontMetrics
     {
         public double EmSize;

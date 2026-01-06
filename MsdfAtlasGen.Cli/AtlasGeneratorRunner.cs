@@ -393,19 +393,8 @@ namespace MsdfAtlasGen.Cli
 
         private void RenderTestImage(Bitmap<float> msdfAtlas, string outputPath)
         {
-            // If the user didn't specify explicit dimensions (we assume 512 is default/arbitrary),
-            // or if we simply want to view the atlas as-is, we should use the atlas dimensions.
-            // Using the atlas dimensions ensures 1:1 per-pixel visualization without stretching.
-            // If the user REALLY wants to resize, they can; but for "checking the atlas", native resolution is best.
-            // Let's use the atlas dimensions unless the user provided a very specific override. 
-            // Since CliConfig doesn't track "DimensionsSpecified", and 512 is a common default, 
-            // it's safer to just use the atlas dimensions to avoid the "M is longer" distortion.
-            
             int width = msdfAtlas.Width;
             int height = msdfAtlas.Height;
-
-            // Optional: if we wanted to support resizing, we would need to check if _config.TestRenderWidth != 512 etc.
-            // But stretching an atlas usually makes no sense for debugging.
             
             var renderOutput = new Bitmap<float>(width, height, 3);
             var renderRange = new Msdfgen.Range(_config.PxRange.Upper - _config.PxRange.Lower);

@@ -23,10 +23,16 @@ namespace MsdfAtlasGen
         private Padding _innerPxPadding;
         private Padding _outerPxPadding;
 
+        /// <summary>
+        /// Initializes a new tight atlas packer with default settings.
+        /// </summary>
         public TightAtlasPacker()
         {
         }
 
+        /// <summary>
+        /// Attempts to pack glyphs into a rectangle of specified size or resolves dimensions based on constraints.
+        /// </summary>
         public int TryPack(GlyphGeometry[] glyphs, DimensionsConstraint dimensionsConstraint, ref int width, ref int height, double scale)
         {
             // Wrap glyphs into boxes
@@ -86,12 +92,6 @@ namespace MsdfAtlasGen
                         RectanglePacking.PackRectangles<PowerOfTwoSizeSelector>(rectArray, _spacing, out w_out, out h_out);
                         break;
                     case DimensionsConstraint.MultipleOfFourSquare:
-                         // We don't have SquareSizeSelector<4> generic in C# essentially. 
-                         // We can instantiate SquareSizeSelector directly via Activator in PackRectangles helper, but we need to pass 'multiple'.
-                         // My PackRectangles implementation uses parameterless ctor (or area only).
-                         // I need to update RectanglePacking.PackRectangles or creating the selector manually here.
-                         
-                         // Manually creates selector:
                          {
                              long totalArea = 0;
                              var rectCopy = new Rectangle[rectArray.Length];
@@ -151,6 +151,9 @@ namespace MsdfAtlasGen
             return 0;
         }
 
+        /// <summary>
+        /// Internal helper to iteratively find the maximum scale that still fits within the dimensions.
+        /// </summary>
         private double PackAndScale(GlyphGeometry[] glyphs)
         {
             bool lastResult = false;
@@ -163,10 +166,6 @@ namespace MsdfAtlasGen
                 lastResult = res;
                 return res;
             }
-
-            // Macro usage in C++: TRY_PACK(scale) -> lastResult = !tryPack(...) [returns 0 on success, so !0 is true]
-            // My TryPack returns 0 on success.
-            // C++ code: if (TRY_PACK(1)) ... means if success.
             
             double minScale = 1, maxScale = 1;
             if (TryPackLocal(1))
@@ -209,6 +208,9 @@ namespace MsdfAtlasGen
             return minScale;
         }
 
+        /// <summary>
+        /// Performs the complete packing process, resolving scale and dimensions as needed.
+        /// </summary>
         public int Pack(GlyphGeometry[] glyphs)
         {
             double initialScale = _scale > 0 ? _scale : _minScale;
@@ -230,91 +232,102 @@ namespace MsdfAtlasGen
             if (_scale <= 0)
             {
                 _scale = PackAndScale(glyphs);
-                // PackAndScale has side effect of setting dimensions?
-                // C++ PackAndScale essentially calls TryPack multiple times.
-                // The last call `TRY_PACK(minScale)` sets dimensions if it succeeds.
-                // But tryPack takes width/height by value in my macro equivalent?
-                // Ah, in C++ `int w = width, h = height;` local vars are passed by ref.
-                // AND `tryPack` updates them.
-                // So if `PackAndScale` succeeds, we need the final dimensions.
-                
-                // Let's re-run TryPack with final scale to ensure side effects are applied to class members if needed?
-                // Wait, C++ `pack` implementation:
-                // if (scale <= 0) scale = packAndScale(...);
-                // It doesn't seem to update width/height members?
-                // But TryPack updates `w` and `h`.
-                // If `PackAndScale` is called, `width` and `height` (members) are only used as input constraints.
-                // If they are -1, `w` and `h` start at -1.
-                // `TryPack` resolves them.
-                // But `PackAndScale` uses local `w` and `h`.
-                // So after `packAndScale`, the members `width` and `height` might still be -1?
-                // C++ `TightAtlasPacker` methods: `getDimensions` returns `this->width`...
-                // So `pack` must update `this->width`?
-                // No, `pack` DOES NOT seem to update `this->width`.
-                // Unless `tryPack` updates the arguments passed by ref.
-                // In `packAndScale`: `int w = width, h = height;`
-                // `TRY_PACK` calls `tryPack(..., w, h, ...)`.
-                // So `w` and `h` are updated. But `this->width` is NOT.
-                // So `getDimensions` would return -1?
-                
-                // Wait. The user of `TightAtlasPacker` probably calls `pack`.
-                // If `pack` succeeds, how do they get dimensions?
-                
-                // Ah, `InitialScale` path: `tryPack(..., width, height, ...)` -> updates members directly!
-                // `PackAndScale` path: uses local copies?
-                // That seems like a bug or I misunderstand C++ code.
-                // C++ `packAndScale` uses `int w = width, h = height;`. It modifies local `w, h`.
-                // It returns `minScale`.
-                // `pack` sets `scale = Result`.
-                // But `width` and `height` members are unchanged if `PackAndScale` path is taken?
-                // This implies `TightAtlasPacker` expects caller to use `initialScale > 0` if they want dimensions set?
-                // Or maybe `PackAndScale` only finds scale, and then we run `tryPack` again?
-                // `pack` function ends after setting scale.
-                // BUT `PackAndScale` calls `TRY_PACK` at the end: `if (!lastResult) TRY_PACK(minScale);`
-                // This updates local `w` and `h`. Still not members.
-
-                // Maybe `TightAtlasPacker` is intended to be used by calling `tryPack` manually if one wants dimensions out?
-                // Or `pack` assumes fixed dimensions or fixed scale mostly.
-                // If `scale <= 0`, we compute it.
-                // But we lose the computed width/height...
-                
-                // However, `ImmediateAtlasGenerator` might not care about `TightAtlasPacker` dimensions state, but rather the glyphs' placement.
-                // `tryPack` calls `glyph->placeBox`.
-                // So the GLYPHS are updated with placement.
-                // The dimensions of the atlas are needed to allocate bitmap though.
-                // If `TightAtlasPacker` doesn't update dimensions, user doesn't know how big the bitmap should be.
-                
-                // Let's look at `main.cpp` or `ImmediateAtlasGenerator` later.
-                // For now I will reproduce C++ logic.
-                
-                // One fix: If I want to persist dimensions after PackAndScale, I should probably update them.
-                // But I'll stick to C++ logic.
             }
             
             if (_scale <= 0)
                 return -1;
                 
-            return 0; // Success?
+            return 0;
         }
 
+        /// <summary>
+        /// Explicitly sets the atlas dimensions.
+        /// </summary>
         public void SetDimensions(int width, int height) { _width = width; _height = height; }
+
+        /// <summary>
+        /// Resets the atlas dimensions to unconstrained.
+        /// </summary>
         public void UnsetDimensions() { _width = -1; _height = -1; }
+
+        /// <summary>
+        /// Sets the dimensions constraint (e.g., Power of Two).
+        /// </summary>
         public void SetDimensionsConstraint(DimensionsConstraint c) { _dimensionsConstraint = c; }
+
+        /// <summary>
+        /// Sets the spacing between glyphs in the atlas.
+        /// </summary>
         public void SetSpacing(int spacing) { _spacing = spacing; }
+
+        /// <summary>
+        /// Sets the fixed scale for glyphs.
+        /// </summary>
         public void SetScale(double scale) { _scale = scale; }
+
+        /// <summary>
+        /// Sets the minimum scale to use during auto-scaling.
+        /// </summary>
         public void SetMinimumScale(double minScale) { _minScale = minScale; }
+
+        /// <summary>
+        /// Sets the distance field range in font units.
+        /// </summary>
         public void SetUnitRange(Msdfgen.Range range) { _unitRange = range; }
+
+        /// <summary>
+        /// Sets the distance field range in pixels.
+        /// </summary>
         public void SetPixelRange(Msdfgen.Range range) { _pxRange = range; }
+
+        /// <summary>
+        /// Sets the miter limit for glyph boundaries.
+        /// </summary>
         public void SetMiterLimit(double val) { _miterLimit = val; }
+
+        /// <summary>
+        /// Enables or disables pixel alignment for glyph origins.
+        /// </summary>
         public void SetOriginPixelAlignment(bool align) { _pxAlignOriginX = _pxAlignOriginY = align; }
+
+        /// <summary>
+        /// Enables or disables pixel alignment for glyph origins separately for X and Y axes.
+        /// </summary>
         public void SetOriginPixelAlignment(bool alignX, bool alignY) { _pxAlignOriginX = alignX; _pxAlignOriginY = alignY; }
+
+        /// <summary>
+        /// Sets the internal padding in font units.
+        /// </summary>
         public void SetInnerUnitPadding(Padding padding) { _innerUnitPadding = padding; }
+
+        /// <summary>
+        /// Sets the external padding in font units.
+        /// </summary>
         public void SetOuterUnitPadding(Padding padding) { _outerUnitPadding = padding; }
+
+        /// <summary>
+        /// Sets the internal padding in pixels.
+        /// </summary>
         public void SetInnerPixelPadding(Padding padding) { _innerPxPadding = padding; }
+
+        /// <summary>
+        /// Sets the external padding in pixels.
+        /// </summary>
         public void SetOuterPixelPadding(Padding padding) { _outerPxPadding = padding; }
 
+        /// <summary>
+        /// Retrieves the resolved atlas dimensions.
+        /// </summary>
         public void GetDimensions(out int width, out int height) { width = _width; height = _height; }
+
+        /// <summary>
+        /// Retrieves the resolved scale.
+        /// </summary>
         public double GetScale() => _scale;
+
+        /// <summary>
+        /// Retrieves the resolved pixel range (combined unit and pixel ranges).
+        /// </summary>
         public Msdfgen.Range GetPixelRange() => _pxRange + _scale * _unitRange;
     }
 }

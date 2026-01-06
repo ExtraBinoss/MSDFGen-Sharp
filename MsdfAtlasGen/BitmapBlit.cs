@@ -5,6 +5,9 @@ namespace MsdfAtlasGen
 {
     public static class BitmapBlit
     {
+        /// <summary>
+        /// Performs a generic block-level transfer (blit) from one bitmap to another.
+        /// </summary>
         public static void Blit<T>(Bitmap<T> dst, Bitmap<T> src, int dx, int dy, int sx, int sy, int w, int h)
         {
             if (dst == null || src == null) return;
@@ -33,6 +36,9 @@ namespace MsdfAtlasGen
             }
         }
 
+        /// <summary>
+        /// Performs a blit while converting from a float-based bitmap to a byte-based bitmap.
+        /// </summary>
         public static void Blit(Bitmap<byte> dst, Bitmap<float> src, int dx, int dy, int sx, int sy, int w, int h)
         {
             if (dst == null || src == null) return;
@@ -74,6 +80,9 @@ namespace MsdfAtlasGen
             }
         }
 
+        /// <summary>
+        /// Converts a float pixel value to a byte value.
+        /// </summary>
         private static byte PixelFloatToByte(float x)
         {
             return (byte)Math.Min(255, Math.Max(0, x * 255.0f + 0.5f));

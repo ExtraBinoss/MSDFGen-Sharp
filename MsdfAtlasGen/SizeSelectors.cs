@@ -2,6 +2,9 @@ using System;
 
 namespace MsdfAtlasGen
 {
+    /// <summary>
+    /// Interface for atlas dimension selection strategies.
+    /// </summary>
     public interface ISizeSelector
     {
         bool GetDimensions(out int width, out int height);
@@ -9,6 +12,9 @@ namespace MsdfAtlasGen
         void Previous();
     }
 
+    /// <summary>
+    /// Strategy that resolves to square dimensions.
+    /// </summary>
     public class SquareSizeSelector : ISizeSelector
     {
         private int _lowerBound;
@@ -54,6 +60,9 @@ namespace MsdfAtlasGen
         }
     }
 
+    /// <summary>
+    /// Strategy that resolves to square power-of-two dimensions (e.g. 1024x1024).
+    /// </summary>
     public class SquarePowerOfTwoSizeSelector : ISizeSelector
     {
         private int _side;
@@ -83,6 +92,9 @@ namespace MsdfAtlasGen
         }
     }
 
+    /// <summary>
+    /// Strategy that resolves to power-of-two dimensions (e.g. 1024x512).
+    /// </summary>
     public class PowerOfTwoSizeSelector : ISizeSelector
     {
         private int _w, _h;

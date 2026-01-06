@@ -109,6 +109,9 @@ namespace MsdfAtlasGen
     /// </summary>
     public static class FntExporter
     {
+        /// <summary>
+        /// Exports the font atlas metadata and glyph metrics to the BMFont XML format (.fnt).
+        /// </summary>
         public static void Export(
             FontGeometry[] fonts,
             ImageType imageType,

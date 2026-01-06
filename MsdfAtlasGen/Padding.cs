@@ -3,15 +3,24 @@ using Msdfgen;
 
 namespace MsdfAtlasGen
 {
+    /// <summary>
+    /// Represents padding around a glyph box.
+    /// </summary>
     public struct Padding
     {
         public double L, B, R, T;
 
+        /// <summary>
+        /// Initializes uniform padding.
+        /// </summary>
         public Padding(double uniformPadding = 0)
         {
             L = B = R = T = uniformPadding;
         }
 
+        /// <summary>
+        /// Initializes specific padding for each side.
+        /// </summary>
         public Padding(double l, double b, double r, double t)
         {
             L = l;
@@ -20,6 +29,9 @@ namespace MsdfAtlasGen
             T = t;
         }
 
+        /// <summary>
+        /// Creates a uniform padding instance.
+        /// </summary>
         public static Padding Create(Shape.Bounds bounds, double padding)
         {
             // Assuming Shape.Bounds has L, B, R, T
@@ -32,6 +44,9 @@ namespace MsdfAtlasGen
             };
         }
 
+        /// <summary>
+        /// Applies padding to a bounding box.
+        /// </summary>
         public static void Pad(ref Shape.Bounds bounds, Padding padding)
         {
             bounds.L -= padding.L;

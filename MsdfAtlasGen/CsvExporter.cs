@@ -6,6 +6,9 @@ namespace MsdfAtlasGen
 {
     public static class CsvExporter
     {
+        /// <summary>
+        /// Exports glyph metrics and atlas positions to a CSV file.
+        /// </summary>
         public static void Export(FontGeometry[] fonts, int atlasWidth, int atlasHeight, YAxisOrientation yDirection, string filename)
         {
             using (var writer = new StreamWriter(filename))
