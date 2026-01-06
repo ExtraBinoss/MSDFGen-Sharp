@@ -113,6 +113,13 @@ namespace MsdfAtlasGen
 
         public void WrapBox(GlyphAttributes glyphAttributes)
         {
+            if (_shape == null || _shape.Contours.Count == 0)
+            {
+                _box.Rect.W = 0; _box.Rect.H = 0;
+                _box.Translate = new Vector2(0, 0);
+                return;
+            }
+
             // glyphAttributes.Scale is already pixels-per-font-unit for this glyph.
             double scale = glyphAttributes.Scale;
             Msdfgen.Range range = glyphAttributes.Range;
@@ -143,7 +150,7 @@ namespace MsdfAtlasGen
                 else
                 {
                     double w = scale * (r - l);
-                    _box.Rect.W = (int)Math.Ceiling(w) + 1;
+                    _box.Rect.W = (int)Math.Ceiling(w);
                     _box.Translate.X = -l + 0.5 * (_box.Rect.W - w) / scale;
                 }
 
@@ -157,10 +164,17 @@ namespace MsdfAtlasGen
                 else
                 {
                     double h = scale * (t - b);
-                    _box.Rect.H = (int)Math.Ceiling(h) + 1;
+                    _box.Rect.H = (int)Math.Ceiling(h);
                     _box.Translate.Y = -b + 0.5 * (_box.Rect.H - h) / scale;
                 }
                 _box.OuterPadding = glyphAttributes.Scale * glyphAttributes.OuterPadding;
+
+                // If after alignment we ended up with non-positive size, zero the rect to avoid blit bleed.
+                if (_box.Rect.W <= 0 || _box.Rect.H <= 0)
+                {
+                    _box.Rect.W = 0; _box.Rect.H = 0;
+                    _box.Translate = new Vector2(0, 0);
+                }
             }
             else
             {

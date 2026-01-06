@@ -46,6 +46,7 @@ namespace MsdfAtlasGen.Cli
         private static string JsonFolder => Path.Combine(BaseOutputFolder, "Json");
         private static string FntFolder => Path.Combine(BaseOutputFolder, "Fnt");
         private static string RenderFolder => Path.Combine(BaseOutputFolder, "Renders");
+        private static string GlyphDumpFolder => Path.Combine(BaseOutputFolder, "GlyphDump");
 
         public AtlasGeneratorRunner(CliConfig config)
         {
@@ -259,6 +260,13 @@ namespace MsdfAtlasGen.Cli
                 JsonExporter.Export(fonts.ToArray(), _config.Type, metrics, jsonOut, _config.Kerning);
             }
 
+            // Debug: dump a single glyph if requested
+            if (!string.IsNullOrEmpty(_config.DebugGlyph))
+            {
+                Directory.CreateDirectory(GlyphDumpFolder);
+                DumpRequestedGlyph(fontGeometry, _config.DebugGlyph);
+            }
+
             if (csvOut != null)
             {
                 Console.WriteLine($"Saving CSV to: {csvOut}");
@@ -300,6 +308,67 @@ namespace MsdfAtlasGen.Cli
 
             Console.WriteLine("Done.");
             return 0;
+        }
+
+        private void DumpRequestedGlyph(FontGeometry font, string glyphSpec)
+        {
+            // Resolve codepoint
+            uint codepoint = 0;
+            if (glyphSpec.Length == 1)
+                codepoint = glyphSpec[0];
+            else if (glyphSpec.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                codepoint = Convert.ToUInt32(glyphSpec.Substring(2), 16);
+            else if (uint.TryParse(glyphSpec, out uint cpInt))
+                codepoint = cpInt;
+
+            var glyph = font.GetGlyph(codepoint);
+            if (glyph == null)
+            {
+                Console.WriteLine($"DebugGlyph: codepoint {codepoint} not found.");
+                return;
+            }
+
+            // Prepare filenames
+            string name = codepoint != 0 ? char.ConvertFromUtf32((int)codepoint) : glyph.GetIndex().ToString();
+            string rawOut = Path.Combine(GlyphDumpFolder, $"raw_msdf_{name}.png");
+            string renderOut = Path.Combine(GlyphDumpFolder, $"render_{name}.png");
+
+            // Use glyph's projection and range to generate per-glyph MSDF
+            var proj = glyph.GetBoxProjection();
+            var range = glyph.GetBoxRange();
+            glyph.GetBoxRect(out int gx, out int gy, out int gw, out int gh);
+
+            int channels = GetChannelCount(_config.Type);
+            var msdf = new Bitmap<float>(Math.Max(gw, 1), Math.Max(gh, 1), channels);
+
+            switch (_config.Type)
+            {
+                case ImageType.Sdf:
+                    MsdfGenerator.GenerateSDF(msdf, glyph.GetShape()!, proj, range, new GeneratorConfig(true));
+                    break;
+                case ImageType.Psdf:
+                    MsdfGenerator.GeneratePSDF(msdf, glyph.GetShape()!, new SDFTransformation(proj, new DistanceMapping(range)), new GeneratorConfig(true));
+                    break;
+                case ImageType.Msdf:
+                    MsdfGenerator.GenerateMSDF(msdf, glyph.GetShape()!, proj, range, new MSDFGeneratorConfig(true, ErrorCorrectionConfig.Default));
+                    break;
+                case ImageType.Mtsdf:
+                    MsdfGenerator.GenerateMTSDF(msdf, glyph.GetShape()!, new SDFTransformation(proj, new DistanceMapping(range)), new MSDFGeneratorConfig(true, ErrorCorrectionConfig.Default));
+                    break;
+            }
+
+            AtlasSaver.SaveAtlas(msdf, rawOut);
+
+            // Render view
+            var render = new Bitmap<float>(_config.TestRenderWidth, _config.TestRenderHeight, 3);
+            var renderRange = new Msdfgen.Range(_config.PxRange.Upper - _config.PxRange.Lower);
+            if (_config.Type == ImageType.Msdf || _config.Type == ImageType.Mtsdf)
+                SdfRenderer.RenderMSDF(render, msdf, renderRange);
+            else
+                SdfRenderer.RenderSDF(render, msdf, renderRange);
+
+            AtlasSaver.SaveAtlas(render, renderOut);
+            Console.WriteLine($"Dumped glyph {name} -> {rawOut}, {renderOut}");
         }
 
         private void RenderTestImage(Bitmap<float> msdfAtlas, string outputPath)

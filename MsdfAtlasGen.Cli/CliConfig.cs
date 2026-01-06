@@ -77,6 +77,9 @@ namespace MsdfAtlasGen.Cli
         public int TestRenderWidth { get; set; } = 512;
         public int TestRenderHeight { get; set; } = 512;
 
+        // Debug single glyph dump
+        public string DebugGlyph { get; set; } = string.Empty; // accepts single char, hex (0xNN), or integer codepoint
+
         public bool IsValid => !string.IsNullOrEmpty(FontPath);
     }
 }

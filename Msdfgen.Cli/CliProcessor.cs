@@ -56,9 +56,54 @@ namespace Msdfgen.Cli
 
         private Shape? LoadShape(CliOptions options)
         {
-            Console.WriteLine("Font loading via SixLabors has been removed. Font loading is now handled by Typography.OpenFont in MsdfAtlasGen.Cli.");
-            Console.WriteLine("Please use MsdfAtlasGen.Cli for font-based atlas generation.");
-            return null;
+            if (string.IsNullOrEmpty(options.FontFile))
+            {
+                Console.Error.WriteLine("No font specified. Use: msdf -font <font.ttf> '<char>'");
+                return null;
+            }
+
+            using var ft = FreetypeHandle.Initialize();
+            if (ft == null)
+            {
+                Console.Error.WriteLine("Failed to initialize FreeType library.");
+                return null;
+            }
+
+            using var fontHandle = FontHandle.LoadFont(ft, options.FontFile);
+            if (fontHandle == null)
+            {
+                Console.Error.WriteLine("Failed to load font.");
+                return null;
+            }
+
+            var shape = new Shape();
+            uint codepoint = options.CharCode;
+            if (!FontLoader.LoadGlyph(shape, fontHandle, codepoint, FontCoordinateScaling.None, out double advance))
+            {
+                Console.Error.WriteLine($"Failed to load glyph for U+{codepoint:X4}.");
+                return null;
+            }
+
+            // Validate and normalize similar to atlas path
+            if (!shape.Validate())
+                Console.WriteLine("Warning: Shape validation failed.");
+            shape.Normalize();
+
+            // Fix winding if needed (outside distance positive)
+            var bounds = shape.GetBounds();
+            Vector2 outerPoint = new Vector2(
+                bounds.L - (bounds.R - bounds.L) - 1,
+                bounds.B - (bounds.T - bounds.B) - 1
+            );
+            var combiner = new SimpleContourCombiner<TrueDistanceSelector>(shape);
+            var finder = new ShapeDistanceFinder<SimpleContourCombiner<TrueDistanceSelector>>(shape, combiner);
+            double distance = finder.Distance(outerPoint);
+            if (distance > 0)
+            {
+                foreach (var contour in shape.Contours)
+                    contour.Reverse();
+            }
+            return shape;
         }
 
         private void PrintShapeInfo(Shape shape)

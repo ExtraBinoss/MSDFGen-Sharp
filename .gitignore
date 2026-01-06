@@ -11,6 +11,7 @@ Msdfgen.Cli/Render/**
 Msdfgen.Cli/ExceptedOutput/**
 Msdfgen.Cli/bin/**
 Msdfgen.Cli/obj/**
+Msdfgen.Cli/*.png
 
 # Msdfgen.Core
 Msdfgen.Core/bin/**

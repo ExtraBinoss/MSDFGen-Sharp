@@ -229,6 +229,13 @@ namespace MsdfAtlasGen.Cli
                         config.TestRenderWidth = int.Parse(args[++i]);
                         config.TestRenderHeight = int.Parse(args[++i]);
                         break;
+                    // Debug single glyph dump
+                    case "-debugglyph":
+                        if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+                        {
+                            config.DebugGlyph = args[++i];
+                        }
+                        break;
                 }
             }
 

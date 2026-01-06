@@ -37,6 +37,10 @@ namespace MsdfAtlasGen
         {
             if (dst == null || src == null) return;
 
+            // If any start is already outside, bail early.
+            if (dx >= dst.Width || dy >= dst.Height) return;
+            if (sx >= src.Width || sy >= src.Height) return;
+
              // Clip logic
             if (dx < 0) { w += dx; sx -= dx; dx = 0; }
             if (dy < 0) { h += dy; sy -= dy; dy = 0; }
@@ -45,8 +49,13 @@ namespace MsdfAtlasGen
             
             if (w <= 0 || h <= 0) return;
             
-            w = Math.Min(w, Math.Min(dst.Width - dx, src.Width - sx));
-            h = Math.Min(h, Math.Min(dst.Height - dy, src.Height - sy));
+            int maxDw = dst.Width - dx;
+            int maxDh = dst.Height - dy;
+            int maxSw = src.Width - sx;
+            int maxSh = src.Height - sy;
+
+            w = Math.Min(w, Math.Min(maxDw, maxSw));
+            h = Math.Min(h, Math.Min(maxDh, maxSh));
 
             if (w <= 0 || h <= 0) return;
             

@@ -15,7 +15,7 @@ namespace Msdfgen.Cli
 
             var options = CliParser.Parse(args);
             
-            if (options.IsHelp)
+            if (options == null || options.IsHelp)
             {
                 CliParser.PrintHelp();
                 return;
