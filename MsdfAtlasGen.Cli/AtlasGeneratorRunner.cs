@@ -205,7 +205,7 @@ namespace MsdfAtlasGen.Cli
             
             var generatorAttributes = new GeneratorAttributes
             {
-                Config = new MSDFGeneratorConfig(true, ErrorCorrectionConfig.Default),
+                Config = new MSDFGeneratorConfig(_config.Overlap, GetErrorCorrectionConfig()),
                 ScanlinePass = _config.Scanline
             };
 
@@ -351,10 +351,10 @@ namespace MsdfAtlasGen.Cli
                     MsdfGenerator.GeneratePSDF(msdf, glyph.GetShape()!, new SDFTransformation(proj, new DistanceMapping(range)), new GeneratorConfig(true));
                     break;
                 case ImageType.Msdf:
-                    MsdfGenerator.GenerateMSDF(msdf, glyph.GetShape()!, proj, range, new MSDFGeneratorConfig(true, ErrorCorrectionConfig.Default));
+                    MsdfGenerator.GenerateMSDF(msdf, glyph.GetShape()!, proj, range, new MSDFGeneratorConfig(true, GetErrorCorrectionConfig()));
                     break;
                 case ImageType.Mtsdf:
-                    MsdfGenerator.GenerateMTSDF(msdf, glyph.GetShape()!, new SDFTransformation(proj, new DistanceMapping(range)), new MSDFGeneratorConfig(true, ErrorCorrectionConfig.Default));
+                    MsdfGenerator.GenerateMTSDF(msdf, glyph.GetShape()!, new SDFTransformation(proj, new DistanceMapping(range)), new MSDFGeneratorConfig(true, GetErrorCorrectionConfig()));
                     break;
             }
 
@@ -482,6 +482,30 @@ namespace MsdfAtlasGen.Cli
                 ImageType.Mtsdf => 4,
                 _ => 3
             };
+        }
+
+        private ErrorCorrectionConfig GetErrorCorrectionConfig()
+        {
+            var mode = ErrorCorrectionConfig.DistanceErrorCorrectionMode.EDGE_ONLY;
+            var distanceCheck = ErrorCorrectionConfig.DistanceCheckMode.CHECK_DISTANCE_AT_EDGE;
+
+            switch (_config.ErrorCorrection.ToLower())
+            {
+                case "disabled": 
+                    mode = ErrorCorrectionConfig.DistanceErrorCorrectionMode.DISABLED; 
+                    break;
+                case "indiscriminate": 
+                    mode = ErrorCorrectionConfig.DistanceErrorCorrectionMode.INDISCRIMINATE;
+                    distanceCheck = ErrorCorrectionConfig.DistanceCheckMode.CHECK_DISTANCE_ALWAYS; // Usually desired for thorough fix
+                    break;
+                case "edgeonly": 
+                    mode = ErrorCorrectionConfig.DistanceErrorCorrectionMode.EDGE_ONLY; 
+                    break;
+                case "auto": 
+                    mode = ErrorCorrectionConfig.DistanceErrorCorrectionMode.AUTO; 
+                    break;
+            }
+            return new ErrorCorrectionConfig(mode, distanceCheck);
         }
     }
 }

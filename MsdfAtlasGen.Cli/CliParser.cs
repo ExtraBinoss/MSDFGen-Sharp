@@ -131,6 +131,9 @@ namespace MsdfAtlasGen.Cli
                     case "-overlap":
                         config.Overlap = true;
                         break;
+                    case "-nooverlap":
+                        config.Overlap = false;
+                        break;
                     case "-nopreprocess":
                         config.NoPreprocess = true;
                         break;
@@ -145,6 +148,9 @@ namespace MsdfAtlasGen.Cli
                         break;
                     case "-yorigin":
                         config.YOrigin = args[++i].ToLower() == "top" ? YAxisOrientation.Downward : YAxisOrientation.Upward;
+                        break;
+                    case "-errorcorrection":
+                        config.ErrorCorrection = args[++i].ToLower();
                         break;
 
                     // Packing

@@ -56,6 +56,7 @@ namespace MsdfAtlasGen.Cli
         public ulong Seed { get; set; } = 0;
         public int Threads { get; set; } = 0; // 0 = auto
         public YAxisOrientation YOrigin { get; set; } = YAxisOrientation.Upward;
+        public string ErrorCorrection { get; set; } = "auto"; // default, auto, indiscriminate, disabled
 
         // Packing
         public int Spacing { get; set; } = 0;
