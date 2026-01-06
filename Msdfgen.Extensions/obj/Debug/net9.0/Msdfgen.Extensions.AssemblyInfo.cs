@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Msdfgen.Extensions")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2a5ddf2a4331953719025735870019b9a348f7ab")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+843e99f91bd9403327d1593af724a76e7e43f6cb")]
 [assembly: System.Reflection.AssemblyProductAttribute("Msdfgen.Extensions")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Msdfgen.Extensions")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

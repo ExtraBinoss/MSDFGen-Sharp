@@ -121,9 +121,17 @@ namespace Msdfgen.Cli
                         exportShapeFile = args[argPos++];
                         break;
                     case "-testrender":
-                        testRenderFile = args[argPos++];
-                        testRenderW = int.Parse(args[argPos++]);
-                        testRenderH = int.Parse(args[argPos++]);
+                        if (argPos + 3 <= args.Length)
+                        {
+                            testRenderFile = args[argPos++];
+                            testRenderW = int.Parse(args[argPos++]);
+                            testRenderH = int.Parse(args[argPos++]);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Error: -testrender requires <filename> <width> <height>");
+                            return;
+                        }
                         break;
                      case "-printmetrics":
                         printMetrics = true;
@@ -157,6 +165,14 @@ namespace Msdfgen.Cli
             // Orient contours to fix winding order (important for correct SDF signs)
             shape.OrientContours();
             shape.Normalize();
+
+            // Debug: Print shape info
+            Console.WriteLine($"Shape has {shape.Contours.Count} contour(s)");
+            for (int c = 0; c < shape.Contours.Count; c++)
+            {
+                var contour = shape.Contours[c];
+                Console.WriteLine($"  Contour {c}: {contour.Edges.Count} edges, winding={contour.Winding()}");
+            }
 
             // C++: If no scale specified and mode is not metrics, autoframe is commonly expected for usable output
             // Enable autoframe if no scale specified explicitly
@@ -219,6 +235,17 @@ namespace Msdfgen.Cli
                 EdgeColoring.EdgeColoringSimple(shape, angleThreshold);
             }
 
+            // Print metrics if requested
+            if (printMetrics)
+            {
+                double l = 1e240, b = 1e240, r = -1e240, t = -1e240;
+                shape.Bound(ref l, ref b, ref r, ref t);
+                Console.WriteLine($"bounds = {l}, {b}, {r}, {t}");
+                Console.WriteLine($"scale = {scale.X}, {scale.Y}");
+                Console.WriteLine($"translate = {translate.X}, {translate.Y}");
+                Console.WriteLine($"range {-pxRange/Math.Min(scale.X, scale.Y)} to {pxRange/Math.Min(scale.X, scale.Y)}");
+            }
+
             int channels = (mode == Mode.MSDF || mode == Mode.PSDF) ? 3 : (mode == Mode.MTSDF ? 4 : 1); 
             // Wait, PSDF is monochrome (1). MSDF is 3. MTSDF is 4. SDF is 1.
             // Correct per doc: "psdf – generates a monochrome signed perpendicular distance field."
@@ -263,12 +290,22 @@ namespace Msdfgen.Cli
             
             if (testRenderFile != null)
             {
-                 // Render shape using the generated bitmap if possible?
-                 // Or render shape directly (Rasterization).
-                 // User asked for "testrender ... using only the distance field".
-                 // This requires RenderSDF.
-                 // Not implemented yet.
-                 Console.WriteLine("Test render not implemented yet.");
+                Console.WriteLine($"Rendering test image to {testRenderFile}...");
+                Bitmap<float> renderOutput = new Bitmap<float>(testRenderW, testRenderH, 3);
+                
+                // Use pxRange for rendering
+                Range renderRange = new Range(pxRange);
+                
+                if (mode == Mode.MSDF || mode == Mode.MTSDF)
+                {
+                    SdfRenderer.RenderMSDF(renderOutput, output, renderRange);
+                }
+                else
+                {
+                    SdfRenderer.RenderSDF(renderOutput, output, renderRange);
+                }
+                
+                ImageSaver.Save(renderOutput, testRenderFile);
             }
         }
 
