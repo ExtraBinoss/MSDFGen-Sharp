@@ -157,8 +157,8 @@ namespace MsdfAtlasGen
             // But Font might not expose Description directly.
             
             // Stubbing to unblock:
-            _metrics.EmSize = metrics.UnitsPerEm; // This one exists?
-            _metrics.AscenderY = metrics.UnitsPerEm; // WRONG but compiles
+            _metrics.EmSize = metrics.UnitsPerEm;
+            _metrics.AscenderY = metrics.UnitsPerEm; // Placeholder
             _metrics.DescenderY = 0;
             _metrics.LineHeight = metrics.UnitsPerEm;
             _metrics.UnderlineY = 0;

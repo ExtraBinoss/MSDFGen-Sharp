@@ -60,6 +60,13 @@ namespace MsdfAtlasGen.Cli
         public int Spacing { get; set; } = 0;
         public double Scale { get; set; } = -1;
 
+        // Padding (in pixels or em units)
+        // Default 5,5,5,5 padding to match msdf-atlas-gen
+        public Padding InnerPxPadding { get; set; } = new Padding(0);
+        public Padding OuterPxPadding { get; set; } = new Padding(2);  // 2px outer padding default
+        public Padding InnerEmPadding { get; set; } = new Padding(0);
+        public Padding OuterEmPadding { get; set; } = new Padding(0);
+
         // Kerning
         public bool Kerning { get; set; } = true;
 

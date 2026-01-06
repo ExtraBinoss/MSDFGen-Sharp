@@ -60,7 +60,18 @@ namespace MsdfAtlasGen.Cli
             {
                 var fontCollection = new FontCollection();
                 var fontFamily = fontCollection.Add(_config.FontPath);
-                font = fontFamily.CreateFont((float)_config.Size);
+                
+                // Load font with size = UnitsPerEm.
+                // This ensures that shape coordinates are in Font Units, which allows FontGeometry to correctly normalize them.
+                // If we loaded with _config.Size (e.g. 32), shapes would be 32px, but FontGeometry divides by UPEM (2048), resulting in tiny glyphs.
+                // By loading at UPEM size, shape = 2048 units, divided by 2048 = 1.0 EM.
+                // FntExporter then multiplies by _config.Size to get back to 32px.
+                
+                // Create temp font to get UPEM
+                var tempFont = fontFamily.CreateFont(16);
+                int upem = tempFont.FontMetrics.UnitsPerEm; // Available on instance metrics
+                
+                font = fontFamily.CreateFont(upem);
             }
             catch (Exception ex)
             {

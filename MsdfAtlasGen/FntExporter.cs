@@ -51,7 +51,8 @@ namespace MsdfAtlasGen
             writer.WriteAttributeString("stretchH", "100");
             writer.WriteAttributeString("smooth", "1");
             writer.WriteAttributeString("aa", "1");
-            writer.WriteAttributeString("padding", "0,0,0,0");
+            int infoPadding = (int)(distanceRange / 2.0 + 2.0); // Range/2 + outer padding
+            writer.WriteAttributeString("padding", $"{infoPadding},{infoPadding},{infoPadding},{infoPadding}");
             writer.WriteAttributeString("spacing", "0,0");
             writer.WriteAttributeString("outline", "0");
             writer.WriteEndElement();
@@ -107,7 +108,10 @@ namespace MsdfAtlasGen
             foreach (var glyph in font.GetGlyphs().Glyphs)
             {
                 glyph.GetQuadAtlasBounds(out double al, out double ab, out double ar, out double at);
-                glyph.GetQuadPlaneBounds(out double pl, out double pb, out double pr, out double pt);
+                
+                // Get raw glyph bounds from shape (in font units)
+                var shapeBounds = glyph.GetShapeBounds();
+                double geometryScale = glyph.GetGeometryScale();
                 
                 int x = (int)Math.Round(al);
                 int y, height;
@@ -124,9 +128,23 @@ namespace MsdfAtlasGen
                 }
                 
                 int width = (int)Math.Round(ar - al);
-                int xoffset = (int)Math.Round(pl * fontSize);
-                int yoffset = (int)Math.Round((1.0 - pt) * fontSize); // Invert for top-down
-                int xadvance = (int)Math.Round(glyph.GetAdvance() * fontSize);
+                
+                // Calculate offsets from raw shape bounds scaled to pixel space
+                // shapeBounds.L = left edge (MinX) in font units
+                // shapeBounds.T = top edge (MaxY) in font units
+                // Multiply by geometryScale (= fontSize / emSize) to get pixels
+                // Subtract padding since glyph is padded in atlas
+                double padding = distanceRange / 2.0 + 2.0; // Range/2 + outer padding
+                
+                double baselineY = metrics.AscenderY; // Already scaled, distance from line top to baseline
+                
+                // xoffset = where glyph starts relative to cursor (scaled MinX - padding)
+                int xoffset = (int)Math.Round(shapeBounds.L * geometryScale - padding);
+                // yoffset = distance from line top to glyph top: baseline - scaled MaxY - padding
+                int yoffset = (int)Math.Round(baselineY - shapeBounds.T * geometryScale - padding);
+                // xadvance = advance width (already scaled in GetAdvance)
+                int xadvance = (int)Math.Round(glyph.GetAdvance());
+
 
                 writer.WriteStartElement("char");
                 writer.WriteAttributeString("id", glyph.GetCodepoint().ToString());
