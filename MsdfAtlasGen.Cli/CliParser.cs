@@ -1,5 +1,6 @@
 using System;
 using Msdfgen;
+using MsdfAtlasGen;
 
 namespace MsdfAtlasGen.Cli
 {
@@ -152,6 +153,60 @@ namespace MsdfAtlasGen.Cli
                         break;
                     case "-scale":
                         config.Scale = double.Parse(args[++i]);
+                        break;
+
+                    // Padding arguments
+                    case "-pxpadding":
+                    case "-innerpxpadding":
+                        double pxPad = double.Parse(args[++i]);
+                        config.InnerPxPadding = new Padding(pxPad);
+                        break;
+                    case "-apxpadding":
+                    case "-ainnerpxpadding":
+                        config.InnerPxPadding = new Padding(
+                            double.Parse(args[++i]),  // left
+                            double.Parse(args[++i]),  // bottom
+                            double.Parse(args[++i]),  // right
+                            double.Parse(args[++i])   // top
+                        );
+                        break;
+                    case "-outerpxpadding":
+                        double outerPxPad = double.Parse(args[++i]);
+                        config.OuterPxPadding = new Padding(outerPxPad);
+                        break;
+                    case "-aouterpxpadding":
+                        config.OuterPxPadding = new Padding(
+                            double.Parse(args[++i]),  // left
+                            double.Parse(args[++i]),  // bottom
+                            double.Parse(args[++i]),  // right
+                            double.Parse(args[++i])   // top
+                        );
+                        break;
+                    case "-empadding":
+                    case "-innerempadding":
+                        double emPad = double.Parse(args[++i]);
+                        config.InnerEmPadding = new Padding(emPad);
+                        break;
+                    case "-aempadding":
+                    case "-ainnerempadding":
+                        config.InnerEmPadding = new Padding(
+                            double.Parse(args[++i]),
+                            double.Parse(args[++i]),
+                            double.Parse(args[++i]),
+                            double.Parse(args[++i])
+                        );
+                        break;
+                    case "-outerempadding":
+                        double outerEmPad = double.Parse(args[++i]);
+                        config.OuterEmPadding = new Padding(outerEmPad);
+                        break;
+                    case "-aouterempadding":
+                        config.OuterEmPadding = new Padding(
+                            double.Parse(args[++i]),
+                            double.Parse(args[++i]),
+                            double.Parse(args[++i]),
+                            double.Parse(args[++i])
+                        );
                         break;
 
                     case "-help":

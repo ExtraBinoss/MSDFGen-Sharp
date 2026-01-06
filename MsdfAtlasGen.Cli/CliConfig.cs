@@ -1,5 +1,6 @@
 using System;
 using Msdfgen;
+using MsdfAtlasGen;
 
 namespace MsdfAtlasGen.Cli
 {
