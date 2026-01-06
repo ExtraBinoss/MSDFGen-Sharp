@@ -250,11 +250,10 @@ namespace MsdfAtlasGen.Cli
             generator.SetThreadCount(threadCount);
 
             Console.WriteLine($"Generation: {threadCount} threads used");
-            var progress = new Progress<double>(percent =>
+            var progress = new Progress<GeneratorProgress>(p =>
             {
-                // Simple textual progress bar
-                // Needs \r to overwrite line
-                Console.Write($"\rGenerating Atlas: {percent * 100:F0}%");
+                string progressText = $"\rGenerating Atlas: {p.Proportion * 100:F0}% ({p.Current}/{p.Total}) [Glyph: {p.GlyphName}]";
+                Console.Write(progressText.PadRight(Console.WindowWidth - 1));
             });
 
             generator.Generate(glyphs, progress);

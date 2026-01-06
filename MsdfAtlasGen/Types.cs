@@ -88,4 +88,15 @@ namespace MsdfAtlasGen
         PowerOfTwoRectangle,
         PowerOfTwoSquare
     }
+
+    /// <summary>
+    /// Carries progress information for atlas generation.
+    /// </summary>
+    public struct GeneratorProgress(double proportion, string glyphName, int current, int total)
+    {
+        public double Proportion = proportion;
+        public string GlyphName = glyphName;
+        public int Current = current;
+        public int Total = total;
+    }
 }

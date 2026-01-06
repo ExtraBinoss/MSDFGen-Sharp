@@ -62,7 +62,7 @@ namespace MsdfAtlasGen
         /// <summary>
         /// Generates the distance field data for the provided glyphs and stores them in the atlas.
         /// </summary>
-        public void Generate(GlyphGeometry[] glyphs, IProgress<double>? progress = null)
+        public void Generate(GlyphGeometry[] glyphs, IProgress<GeneratorProgress>? progress = null)
         {
             int count = glyphs.Length;
             int maxBoxArea = 0;
@@ -83,6 +83,8 @@ namespace MsdfAtlasGen
             Parallel.For(0, count, parallelOptions, (i) =>
             {
                 var glyph = glyphs[i];
+                string glyphName = glyph.GetCodepoint() != 0 ? char.ConvertFromUtf32((int)glyph.GetCodepoint()) : glyph.GetIndex().ToString();
+
                 if (!glyph.IsWhitespace())
                 {
                     glyph.GetBoxRect(out int l, out int b, out int w, out int h);
@@ -91,16 +93,12 @@ namespace MsdfAtlasGen
                         var glyphBitmap = new Bitmap<T>(w, h, _storage.Bitmap.Channels);
                         _generatorFunction(glyphBitmap, glyph, _attributes);
                         
-                        // Storage Put (blit) needs to be thread safe if writing to overlapping regions or if internal bitmap isn't thread safe.
-                        // Bitmap<T>.Pixels is an array. Disjoint writes are safe.
-                        // Guillotine packing ensures disjoint regions.
-                        
                         _storage.Put(l, b, glyphBitmap);
                     }
                 }
                 
                 int current = System.Threading.Interlocked.Increment(ref completed);
-                progress?.Report((double)current / count);
+                progress?.Report(new GeneratorProgress((double)current / count, glyphName, current, count));
             });
         }
         
