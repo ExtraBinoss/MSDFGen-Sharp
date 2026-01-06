@@ -87,9 +87,52 @@ namespace Msdfgen
 
                 if (corners.Count == 0)
                 {
+                    // // Smooth contour - for MSDF to work properly, we need at least 3 different colors
+                    // // This is critical for smooth shapes like O, 0, etc.
+                    // EdgeColor[] colors = { EdgeColor.CYAN, EdgeColor.MAGENTA, EdgeColor.YELLOW };
                     SwitchColor(ref color, ref seed);
-                    foreach (var edge in contour.Edges)
-                        edge.Color = color;
+                    
+                    // if (contour.Edges.Count >= 3)
+                    // {
+                    //     // Assign colors cyclically
+                    //     for (int i = 0; i < contour.Edges.Count; i++)
+                    //         contour.Edges[i].Color = colors[i % 3];
+                    // }
+                    // else if (contour.Edges.Count == 2)
+                    // {
+                    //     // Split first edge into thirds, giving us 4 edges total
+                    //     EdgeSegment[] parts = new EdgeSegment[3];
+                    //     contour.Edges[0].SplitInThirds(out parts[0], out parts[1], out parts[2]);
+                    //     var edge1 = contour.Edges[1];
+                    //     contour.Edges.Clear();
+                    //     parts[0].Color = EdgeColor.CYAN;
+                    //     parts[1].Color = EdgeColor.MAGENTA;
+                    //     parts[2].Color = EdgeColor.YELLOW;
+                    //     edge1.Color = EdgeColor.CYAN;
+                    //     contour.Edges.Add(parts[0]);
+                    //     contour.Edges.Add(parts[1]);
+                    //     contour.Edges.Add(parts[2]);
+                    //     contour.Edges.Add(edge1);
+                    // }
+                    // else if (contour.Edges.Count == 1)
+                    // {
+                    //     // Split into thirds
+                    //     EdgeSegment[] parts = new EdgeSegment[3];
+                    //     contour.Edges[0].SplitInThirds(out parts[0], out parts[1], out parts[2]);
+                    //     contour.Edges.Clear();
+                    //     parts[0].Color = EdgeColor.CYAN;
+                    //     parts[1].Color = EdgeColor.MAGENTA;
+                    //     parts[2].Color = EdgeColor.YELLOW;
+                    //     contour.Edges.Add(parts[0]);
+                    //     contour.Edges.Add(parts[1]);
+                    //     contour.Edges.Add(parts[2]);
+                    // }
+                    // else
+                    // {
+                    //     // Empty contour, just assign single color
+                    //     foreach (var edge in contour.Edges)
+                    //         edge.Color = color;
+                    // }
                 }
                 else if (corners.Count == 1)
                 {
