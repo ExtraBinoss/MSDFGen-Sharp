@@ -14,7 +14,10 @@ namespace Msdfgen.Extensions
             var renderer = new ShapeRenderer(shape);
             
             TextRenderer.RenderTextTo(renderer, character.ToString(), new TextOptions(font));
-
+            
+            // Set Y-axis orientation to match C++ behavior
+            shape.SetYAxisOrientation(YAxisOrientation.Upward);
+            
             return shape;
         }
 
@@ -56,26 +59,46 @@ namespace Msdfgen.Extensions
 
             public void LineTo(System.Numerics.Vector2 point)
             {
-                _currentContour.AddEdge(new LinearSegment(ToVector2(_currentPoint), ToVector2(point)));
-                _currentPoint = point;
+                // Filter degenerate edges (like C++ does)
+                if (point != _currentPoint)
+                {
+                    _currentContour.AddEdge(new LinearSegment(ToVector2(_currentPoint), ToVector2(point)));
+                    _currentPoint = point;
+                }
             }
 
             public void QuadraticBezierTo(System.Numerics.Vector2 secondControlPoint, System.Numerics.Vector2 point)
             {
-                _currentContour.AddEdge(new QuadraticSegment(ToVector2(_currentPoint), ToVector2(secondControlPoint), ToVector2(point)));
-                _currentPoint = point;
+                // Filter degenerate edges
+                if (point != _currentPoint)
+                {
+                    _currentContour.AddEdge(new QuadraticSegment(ToVector2(_currentPoint), ToVector2(secondControlPoint), ToVector2(point)));
+                    _currentPoint = point;
+                }
             }
 
             public void CubicBezierTo(System.Numerics.Vector2 secondControlPoint, System.Numerics.Vector2 thirdControlPoint, System.Numerics.Vector2 point)
             {
-                 _currentContour.AddEdge(new CubicSegment(ToVector2(_currentPoint), ToVector2(secondControlPoint), ToVector2(thirdControlPoint), ToVector2(point)));
-                 _currentPoint = point;
+                // For cubic, also add if control points indicate a real curve (like C++ does)
+                var p0 = ToVector2(_currentPoint);
+                var p1 = ToVector2(secondControlPoint);
+                var p2 = ToVector2(thirdControlPoint);
+                var p3 = ToVector2(point);
+                
+                if (point != _currentPoint || Msdfgen.Vector2.CrossProduct(p1 - p3, p2 - p3) != 0)
+                {
+                    _currentContour.AddEdge(new CubicSegment(p0, p1, p2, p3));
+                    _currentPoint = point;
+                }
             }
 
             public void EndFigure()
             {
-                // Implicit close if gap?
-                // Msdfgen expects closed.
+                // Remove empty contours (like C++ does at the end)
+                if (_currentContour.Edges.Count == 0 && _shape.Contours.Contains(_currentContour))
+                {
+                    _shape.Contours.Remove(_currentContour);
+                }
             }
 
             public void SetDecoration(TextDecorations decorations, System.Numerics.Vector2 start, System.Numerics.Vector2 end, float thickness)
@@ -90,18 +113,12 @@ namespace Msdfgen.Extensions
             
             private static Msdfgen.Vector2 ToVector2(System.Numerics.Vector2 v)
             {
-                // Invert Y? Font coordinates are usually Y-up (mathematically) or Y-down (screen).
-                // SixLabors.Fonts uses Y-down (screen coords) relative to baseline usually?
-                // Wait, TrueType is Y-Up. SixLabors normalizes to screen coords (Y-down).
-                // MSDFGen expects standardized coordinates. 
-                // We should probably just pass through and let MSDFGen Transform handle inversion via Config.
-                return new Msdfgen.Vector2(v.X, -v.Y); // Flip Y to get standard Cartesian if needed?
-                // Let's stick to raw and let user flip with arguments if needed or check later.
-                // Standard MSDFGen CLI output usually requires Y up for texture coords or matching expectations.
-                // TTF is Y-Up. If SixLabors converts to Y-Down, we might need to flip back.
-                
-                // Let's check SixLabors behavior.
+                // SixLabors.Fonts uses screen coordinates (Y-down from baseline).
+                // TrueType fonts are Y-up, so FreeType gives Y-up coordinates.
+                // We need to flip Y to get Y-up coordinates matching FreeType.
+                return new Msdfgen.Vector2(v.X, -v.Y);
             }
         }
     }
 }
+
