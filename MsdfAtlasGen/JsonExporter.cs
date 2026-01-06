@@ -35,10 +35,10 @@ namespace MsdfAtlasGen
             {
                 case ImageType.HardMask: return "hardmask";
                 case ImageType.SoftMask: return "softmask";
-                case ImageType.SDF: return "sdf";
-                case ImageType.PSDF: return "psdf";
-                case ImageType.MSDF: return "msdf";
-                case ImageType.MTSDF: return "mtsdf";
+                case ImageType.Sdf: return "sdf";
+                case ImageType.Psdf: return "psdf";
+                case ImageType.Msdf: return "msdf";
+                case ImageType.Mtsdf: return "mtsdf";
                 default: return "unknown";
             }
         }
@@ -51,7 +51,7 @@ namespace MsdfAtlasGen
             {
                 ["type"] = ImageTypeString(imageType)
             };
-            if (imageType == ImageType.SDF || imageType == ImageType.PSDF || imageType == ImageType.MSDF || imageType == ImageType.MTSDF)
+            if (imageType == MsdfAtlasGen.ImageType.Sdf || imageType == MsdfAtlasGen.ImageType.Psdf || imageType == MsdfAtlasGen.ImageType.Msdf || imageType == MsdfAtlasGen.ImageType.Mtsdf)
             {
                 atlas["distanceRange"] = metrics.DistanceRange.Upper - metrics.DistanceRange.Lower;
                 atlas["distanceRangeMiddle"] = 0.5 * (metrics.DistanceRange.Lower + metrics.DistanceRange.Upper);
@@ -137,7 +137,7 @@ namespace MsdfAtlasGen
             };
 
             var glyphsList = new List<object>();
-            foreach (var glyph in font.GetGlyphs())
+            foreach (var glyph in font.GetGlyphs().Glyphs)
             {
                 var gObj = new Dictionary<string, object>();
                 if (font.GetPreferredIdentifierType() == GlyphIdentifierType.GlyphIndex)

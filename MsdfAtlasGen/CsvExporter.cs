@@ -13,7 +13,7 @@ namespace MsdfAtlasGen
                 for (int i = 0; i < fonts.Length; ++i)
                 {
                     var font = fonts[i];
-                    foreach (var glyph in font.GetGlyphs())
+                    foreach (var glyph in font.GetGlyphs().Glyphs)
                     {
                         if (fonts.Length > 1)
                             writer.Write($"{i},");

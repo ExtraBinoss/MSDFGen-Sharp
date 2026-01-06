@@ -58,24 +58,9 @@ namespace MsdfAtlasGen
                 _geometryScale = geometryScale;
 
                 // Get advance
-                if (font.TryGetGlyph(new SixLabors.Fonts.Unicode.CodePoint(character), out var glyph)) 
-                {
-                    // Advance width in font units? or pixels?
-                    // SixLabors returns metrics in em units usually if accessing helper, but Glyph instance might have it.
-                    // Actually font.TryGetGlyph returns a GlyphInstance if we render, but the struct Glyph has 'Bounds' etc.
-                    // We need to check units.
-                    // For now, let's assume standard behavior or fix later.
-                    // Shape from FontLoader is already scaled? No, FontLoader uses font size?
-                    // FontLoader uses `new TextOptions(font)`.
-                    // The shape coordinates depend on font size passed to `font`.
-                    // If we want normalized coordinates, we should use a standard size or normalize.
-                    // MSDFGen usually works with normalized or consistent units.
-                    
-                    // C++: loadGlyph(..., FONT_SCALING_NONE, &advance).
-                    // FontLoader uses whatever the font is set to.
-                    
-                    _advance = glyph.Instance.AdvanceWidth; // Need to verify API of SixLabors.Fonts 2.x/3.x
-                }
+                // Use TextMeasurer to get advance width
+                var rect = TextMeasurer.MeasureAdvance(character.ToString(), new TextOptions(font));
+                _advance = rect.Width;
                 
                 _advance *= geometryScale;
 
