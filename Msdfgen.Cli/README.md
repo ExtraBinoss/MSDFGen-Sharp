@@ -10,6 +10,11 @@ Generate an MSDF for the letter 'A' with automatic framing and a test render:
 dotnet run -c Release -- msdf -font "../assets/test_fonts/Roboto-Regular.ttf" 'A' -dimensions 128 128 -pxrange 4 -autoframe -testrender
 ```
 
+| Raw MSDF Output | Rendered Result |
+| :---: | :---: |
+| ![Raw MSDF A](../assets/images/msdf-gen/raw_msdf_A.png) | ![Rendered A](../assets/images/msdf-gen/rendered_A.png) |
+| *128x128 MSDF* | *Software Render* |
+
 ---
 
 ## 🛠 Command Line Options

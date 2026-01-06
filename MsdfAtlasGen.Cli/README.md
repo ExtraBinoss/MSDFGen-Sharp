@@ -112,3 +112,14 @@ The tool automatically organizes outputs:
 - `output/Json/`: Metadata and CSV files.
 - `output/Renders/`: Visual verification images.
 - `output/GlyphDump/`: (When using `-debugglyph`) Raw data for a specific character.
+
+---
+
+## 🎨 Visual Showcase
+
+### Complex Font Example: Barbarian
+Generating a high-detail atlas for a decorative font.
+
+| MSDF Atlas | Rendered Result |
+| :---: | :---: |
+| ![Barbarian Atlas](../assets/images/msdf-atlas-gen/Barbarian.png) | ![Barbarian Render](../assets/images/msdf-atlas-gen/Barbarian_render.png) |

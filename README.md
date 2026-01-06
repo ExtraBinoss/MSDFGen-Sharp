@@ -1,5 +1,10 @@
 # MSDFGen-Sharp
 
+| Raw MSDF | Rendered Glyph |
+| :---: | :---: |
+| ![Raw MSDF A](assets/images/msdf-gen/raw_msdf_A.png) | ![Rendered A](assets/images/msdf-gen/rendered_A.png) |
+| *Original MSDF output* | *High-quality rendered result* |
+
 A comprehensive C# port of the original [msdfgen](https://github.com/Chlumsky/msdfgen) and [msdf-atlas-gen](https://github.com/Chlumsky/msdf-atlas-gen) projects. This library provides high-quality Multi-channel Signed Distance Field (MSDF) generation for fonts and vector graphics, maintaining an almost 1:1 correspondence with the CLI and core functionality of Chlumsky's original implementation.
 
 ## 🏗 Project Architecture
@@ -42,4 +47,15 @@ This project is licensed under the MIT License. It utilizes several third-party 
 - **[FreeTypeSharp](https://github.com/ryancheung/FreeTypeSharp)**: MIT License.
 - **[SixLabors ImageSharp](https://github.com/SixLabors/ImageSharp)**: Six Labors Split License.
     - *Note: For open-source projects or companies with <$1M USD annual gross revenue, this falls under the **Apache License, Version 2.0**.*
+
+## 🎨 Showcase
+
+### Font Atlases and Renders
+
+Below are examples of generated MSDF atlases and how they appear when rendered.
+
+| Font | MSDF Atlas | Rendered Showcase |
+| :--- | :---: | :---: |
+| **Roboto Regular** | ![Roboto Atlas](assets/images/msdf-atlas-gen/Roboto-Regular.png) | ![Roboto Render](assets/images/msdf-atlas-gen/Roboto-Regular_render.png) |
+| **Barbarian** (Fantasy) | ![Barbarian Atlas](assets/images/msdf-atlas-gen/Barbarian.png) | ![Barbarian Render](assets/images/msdf-atlas-gen/Barbarian_render.png) |
 
