@@ -6,7 +6,7 @@ namespace Msdfgen.Cli
 {
     public static class CliParser
     {
-        public static CliOptions Parse(string[] args)
+        public static CliOptions? Parse(string[] args)
         {
             var options = new CliOptions();
 
@@ -59,6 +59,7 @@ namespace Msdfgen.Cli
                         break;
                     case "-o":
                         options.OutputFile = args[argPos++];
+                        options.OutputFileSpecified = true;
                         break;
                     case "-dimensions":
                         options.Width = int.Parse(args[argPos++]);
@@ -90,17 +91,40 @@ namespace Msdfgen.Cli
                         options.ExportShapeFile = args[argPos++];
                         break;
                     case "-testrender":
-                        if (argPos + 3 <= args.Length)
+                        options.TestRenderSpecified = true; // User explicitly requested test render
+                        // Check for optional arguments
+                        // Potential conventions:
+                        // -testrender (no args) -> default name, default size
+                        // -testrender output.png -> explicit name, default size
+                        // -testrender output.png W H -> explicit name, explicit size
+                        
+                        // We check next arg. If it starts with '-', it's a new flag, so no args provided.
+                        if (argPos < args.Length && !args[argPos].StartsWith("-"))
                         {
-                            options.TestRenderFile = args[argPos++];
-                            options.TestRenderWidth = int.Parse(args[argPos++]);
-                            options.TestRenderHeight = int.Parse(args[argPos++]);
+                             string nextArg = args[argPos];
+                             // Check if it's a number (width) - unlikely as first arg for testrender usually filename
+                             if (int.TryParse(nextArg, out int _))
+                             {
+                                 // Odd usage: -testrender 512 512? Assume first is width if both are numbers?
+                                 // Let's stick to consistent: Filename first.
+                                 // If it's a number, it's ambiguous if we allow skipping filename. 
+                                 // Let's assumes if args exist, first is filename.
+                                 options.TestRenderFile = args[argPos++];
+                             }
+                             else
+                             {
+                                 options.TestRenderFile = args[argPos++];
+                             }
+
+                             // Now check for dimensions
+                             if (argPos + 1 < args.Length && int.TryParse(args[argPos], out int w) && int.TryParse(args[argPos+1], out int h))
+                             {
+                                 options.TestRenderWidth = w;
+                                 options.TestRenderHeight = h;
+                                 argPos += 2;
+                             }
                         }
-                        else
-                        {
-                            Console.WriteLine("Error: -testrender requires <filename> <width> <height>");
-                            return null;
-                        }
+                        // Default filename will be handled in Processor if TestRenderFile is null
                         break;
                      case "-printmetrics":
                         options.PrintMetrics = true;

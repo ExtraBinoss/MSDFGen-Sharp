@@ -2,7 +2,14 @@ using System;
 
 namespace Msdfgen
 {
-    public class TrueDistanceSelector
+    public interface IEdgeSelector
+    {
+        object CreateEdgeCache();
+        void Reset(Vector2 p);
+        void AddEdge(object cache, EdgeSegment prevEdge, EdgeSegment edge, EdgeSegment nextEdge);
+    }
+
+    public class TrueDistanceSelector : IEdgeSelector
     {
         public class EdgeCache
         {
@@ -28,8 +35,9 @@ namespace Msdfgen
             this.p = p;
         }
 
-        public void AddEdge(EdgeCache cache, EdgeSegment prevEdge, EdgeSegment edge, EdgeSegment nextEdge)
+        public void AddEdge(object cacheObj, EdgeSegment prevEdge, EdgeSegment edge, EdgeSegment nextEdge)
         {
+            var cache = (EdgeCache)cacheObj;
             double delta = DISTANCE_DELTA_FACTOR * (p - cache.Point).Length();
             if (cache.AbsDistance - delta <= Math.Abs(minDistance.Distance))
             {
@@ -84,11 +92,10 @@ namespace Msdfgen
             return false;
         }
         
-        // ... (fields)
         protected SignedDistance minTrueDistance;
         protected double minNegativePerpendicularDistance;
         protected double minPositivePerpendicularDistance;
-        protected EdgeSegment nearEdge;
+        protected EdgeSegment? nearEdge;
         protected double nearEdgeParam;
 
         public PerpendicularDistanceSelectorBase()
@@ -96,6 +103,7 @@ namespace Msdfgen
             minTrueDistance = SignedDistance.Infinite;
             minNegativePerpendicularDistance = -Math.Abs(minTrueDistance.Distance);
             minPositivePerpendicularDistance = Math.Abs(minTrueDistance.Distance);
+            nearEdge = null;
         }
 
         public void Reset(double delta)
@@ -124,7 +132,7 @@ namespace Msdfgen
                 ))
             );
         }
-        // ...
+
         public void AddEdgeTrueDistance(EdgeSegment edge, SignedDistance distance, double param)
         {
             if (distance < minTrueDistance)
@@ -176,7 +184,7 @@ namespace Msdfgen
         }
     }
     
-    public class PerpendicularDistanceSelector : PerpendicularDistanceSelectorBase
+    public class PerpendicularDistanceSelector : PerpendicularDistanceSelectorBase, IEdgeSelector
     {
         private Vector2 p;
         
@@ -189,12 +197,11 @@ namespace Msdfgen
             this.p = p;
         }
 
-        public void AddEdge(EdgeCache cache, EdgeSegment prevEdge, EdgeSegment edge, EdgeSegment nextEdge)
+        public void AddEdge(object cacheObj, EdgeSegment prevEdge, EdgeSegment edge, EdgeSegment nextEdge)
         {
-            // ... (logic)
+            var cache = (EdgeCache)cacheObj;
             if (IsEdgeRelevant(cache, edge, p))
             {
-                 // ...
                 double param;
                 SignedDistance distance = edge.SignedDistance(p, out param);
                 AddEdgeTrueDistance(edge, distance, param);
@@ -234,7 +241,7 @@ namespace Msdfgen
         }
     }
 
-    public class MultiDistanceSelector
+    public class MultiDistanceSelector : IEdgeSelector
     {
         public bool hasTrueDistance() => false;
         
@@ -255,8 +262,9 @@ namespace Msdfgen
             this.p = p;
         }
 
-        public void AddEdge(PerpendicularDistanceSelectorBase.EdgeCache cache, EdgeSegment prevEdge, EdgeSegment edge, EdgeSegment nextEdge)
+        public void AddEdge(object cacheObj, EdgeSegment prevEdge, EdgeSegment edge, EdgeSegment nextEdge)
         {
+            var cache = (PerpendicularDistanceSelectorBase.EdgeCache)cacheObj;
             if (
                 ((edge.Color & EdgeColor.RED) != 0 && r.IsEdgeRelevant(cache, edge, p)) ||
                 ((edge.Color & EdgeColor.GREEN) != 0 && g.IsEdgeRelevant(cache, edge, p)) ||

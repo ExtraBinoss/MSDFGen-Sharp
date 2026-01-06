@@ -10,7 +10,7 @@ namespace Msdfgen
             // output.reorient(shape.getYAxisOrientation()); // Not implemented in Bitmap yet
             
             // Create Combiner via reflection
-            TCombiner contourCombiner = (TCombiner)Activator.CreateInstance(typeof(TCombiner), shape);
+            TCombiner contourCombiner = (TCombiner)Activator.CreateInstance(typeof(TCombiner), shape)!;
             
             ShapeDistanceFinder<TCombiner> distanceFinder = new ShapeDistanceFinder<TCombiner>(shape, contourCombiner);
             

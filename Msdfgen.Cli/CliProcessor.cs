@@ -55,9 +55,9 @@ namespace Msdfgen.Cli
             }
         }
 
-        private Shape LoadShape(CliOptions options)
+        private Shape? LoadShape(CliOptions options)
         {
-            Shape shape = null;
+            Shape? shape = null;
             if (options.FontFile != null)
             {
                 try 
@@ -159,26 +159,43 @@ namespace Msdfgen.Cli
                     if (!Directory.Exists(rawMsdfDir)) Directory.CreateDirectory(rawMsdfDir);
                     if (!Directory.Exists(renderDir)) Directory.CreateDirectory(renderDir);
                     
-                    if (!string.IsNullOrEmpty(options.OutputFile))
+                    // Auto-generate OutputFile if not specified
+                    if (!options.OutputFileSpecified)
                     {
+                        string charName = GetCharName(options.CharCode);
+                        options.OutputFile = Path.Combine(rawMsdfDir, $"raw_msdf_{charName}.png");
+                    }
+                    else if (!string.IsNullOrEmpty(options.OutputFile))
+                    {
+                        // Existing logic for specified file, just ensuring directory correctness relative to rawMsdfDir if needed?
+                        // User might have provided full path or relative. Use as is if it looks like a path?
+                        // Previous logic forced it into RawMsdfDir. Let's keep that behavior if it's just a filename.
                         string fName = Path.GetFileName(options.OutputFile);
-                        if (fName.StartsWith("output_", StringComparison.OrdinalIgnoreCase))
-                            fName = fName.Substring(7);
-                        if (!fName.StartsWith("raw_msdf_", StringComparison.OrdinalIgnoreCase))
-                            fName = "raw_msdf_" + fName;
-                        options.OutputFile = Path.Combine(rawMsdfDir, fName);
+                        string dir = Path.GetDirectoryName(options.OutputFile);
+                        if (string.IsNullOrEmpty(dir))
+                        {
+                             // It's just a filename, put in RawMsdf
+                             options.OutputFile = Path.Combine(rawMsdfDir, fName);
+                        }
+                        // Else user provided a path, respect it (or relative to cwd)
                     }
                     
-                    if (!string.IsNullOrEmpty(options.TestRenderFile))
+                    // Auto-generate TestRenderFile if specified (flag true) but no file given, OR if not specified but user wants auto behavior?
+                    // User asked: "if I omit the -o and testrender 'path'..." implies he might invoke -testrender w/o path.
+                    if (options.TestRenderSpecified && string.IsNullOrEmpty(options.TestRenderFile))
                     {
+                        string charName = GetCharName(options.CharCode);
+                        options.TestRenderFile = Path.Combine(renderDir, $"rendered_{charName}.png");
+                    }
+                    else if (!string.IsNullOrEmpty(options.TestRenderFile))
+                    {
+                         // Similar logic: if just filename, put in RenderDir
                         string fName = Path.GetFileName(options.TestRenderFile);
-                        if (fName.StartsWith("output_render_", StringComparison.OrdinalIgnoreCase))
-                            fName = fName.Substring(14);
-                        else if (fName.StartsWith("output_", StringComparison.OrdinalIgnoreCase))
-                            fName = fName.Substring(7);
-                        if (!fName.StartsWith("rendered_", StringComparison.OrdinalIgnoreCase))
-                            fName = "rendered_" + fName;
-                        options.TestRenderFile = Path.Combine(renderDir, fName);
+                        string dir = Path.GetDirectoryName(options.TestRenderFile);
+                        if (string.IsNullOrEmpty(dir))
+                        {
+                             options.TestRenderFile = Path.Combine(renderDir, fName);
+                        }
                     }
                 }
             }
@@ -186,6 +203,12 @@ namespace Msdfgen.Cli
             {
                 Console.WriteLine($"Warning: Could not configure output directories: {ex.Message}");
             }
+        }
+
+        private string GetCharName(char c)
+        {
+            if (char.IsLetterOrDigit(c)) return c.ToString();
+            return ((int)c).ToString("X4");
         }
 
         private void PrintMetrics(Shape shape, CliOptions options)
@@ -242,7 +265,8 @@ namespace Msdfgen.Cli
              else
                  SdfRenderer.RenderSDF(renderOutput, msdf, renderRange);
                  
-             ImageSaver.Save(renderOutput, options.TestRenderFile);
+             if (!string.IsNullOrEmpty(options.TestRenderFile))
+                 ImageSaver.Save(renderOutput, options.TestRenderFile!);
         }
     }
 }

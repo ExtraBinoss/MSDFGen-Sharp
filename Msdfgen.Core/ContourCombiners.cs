@@ -36,7 +36,7 @@ namespace Msdfgen
         }
     }
 
-    public class SimpleContourCombiner<TSelector> where TSelector : new()
+    public class SimpleContourCombiner<TSelector> where TSelector : IEdgeSelector, new()
     {
         private TSelector shapeEdgeSelector;
 
@@ -47,21 +47,25 @@ namespace Msdfgen
 
         public void Reset(Vector2 p)
         {
-            ((dynamic)shapeEdgeSelector).Reset(p);
+            shapeEdgeSelector.Reset(p);
         }
 
-        public TSelector EdgeSelector(int i)
+        public IEdgeSelector EdgeSelector(int i)
         {
             return shapeEdgeSelector;
         }
 
         public dynamic Distance()
         {
+            // Assuming TSelector types have specific Distance methods not in IEdgeSelector
+            // We still need dynamic or a generic interface for Distance?
+            // "Distance" return type varies. 
+            // So keep dynamic for Distance call, but safe for others.
              return ((dynamic)shapeEdgeSelector).Distance();
         }
     }
 
-    public class OverlappingContourCombiner<TSelector> where TSelector : new()
+    public class OverlappingContourCombiner<TSelector> where TSelector : IEdgeSelector, new()
     {
         private Vector2 p;
         private List<int> windings;
@@ -82,7 +86,7 @@ namespace Msdfgen
         {
             this.p = p;
             foreach (var selector in edgeSelectors)
-                ((dynamic)selector).Reset(p);
+                selector.Reset(p);
         }
 
         public TSelector EdgeSelector(int i)
@@ -93,21 +97,23 @@ namespace Msdfgen
         public dynamic Distance()
         {
             int contourCount = edgeSelectors.Count;
+            // TSelector is constraint to new() so we can create instances
             TSelector shapeEdgeSelector = new TSelector();
             TSelector innerEdgeSelector = new TSelector();
             TSelector outerEdgeSelector = new TSelector();
-            ((dynamic)shapeEdgeSelector).Reset(p);
-            ((dynamic)innerEdgeSelector).Reset(p);
-            ((dynamic)outerEdgeSelector).Reset(p);
+            
+            shapeEdgeSelector.Reset(p);
+            innerEdgeSelector.Reset(p);
+            outerEdgeSelector.Reset(p);
 
             for (int i = 0; i < contourCount; ++i)
             {
-                dynamic edgeDistance = ((dynamic)edgeSelectors[i]).Distance();
-                ((dynamic)shapeEdgeSelector).Merge(edgeSelectors[i]); // TSelector must have Merge(TSelector)
+                dynamic edgeDistance = ((dynamic)edgeSelectors[i]!).Distance();
+                ((dynamic)shapeEdgeSelector!).Merge(edgeSelectors[i]); // TSelector must have Merge(TSelector)
                 if (windings[i] > 0 && ContourCombinerHelpers.ResolveDistance(edgeDistance) >= 0)
-                    ((dynamic)innerEdgeSelector).Merge(edgeSelectors[i]);
+                    ((dynamic)innerEdgeSelector!).Merge(edgeSelectors[i]);
                 if (windings[i] < 0 && ContourCombinerHelpers.ResolveDistance(edgeDistance) <= 0)
-                    ((dynamic)outerEdgeSelector).Merge(edgeSelectors[i]);
+                    ((dynamic)outerEdgeSelector!).Merge(edgeSelectors[i]);
             }
 
             dynamic shapeDistance = ((dynamic)shapeEdgeSelector).Distance();

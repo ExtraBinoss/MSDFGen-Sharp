@@ -180,9 +180,13 @@ namespace Msdfgen
             return new Vector2(a.X / b, a.Y / b);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            return obj is Vector2 vector && Equals(vector);
+            if (obj is Vector2 other)
+            {
+                return Equals(other);
+            }
+            return false;
         }
 
         public bool Equals(Vector2 other)

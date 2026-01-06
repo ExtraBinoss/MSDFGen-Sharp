@@ -22,8 +22,6 @@ namespace Msdfgen.Extensions
                         // Need to clamp and convert to byte.
                         // Assuming 3 channels for MSDF, 1 for SDF.
                         
-                        float r, g, b, a;
-                        
                         // We need to flip Y for image output? 
                         // MSDFGen standard: Origin bottom-left? 
                         // ImageSharp: Origin top-left.

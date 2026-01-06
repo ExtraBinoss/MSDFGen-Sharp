@@ -17,10 +17,10 @@ namespace Msdfgen.Cli
         public MsdfMode Mode { get; set; } = MsdfMode.MSDF;
 
         // Input
-        public string FontFile { get; set; }
+        public string? FontFile { get; set; }
         public char CharCode { get; set; }
-        public string ShapeDescFile { get; set; }
-        public string ShapeDesc { get; set; }
+        public string? ShapeDescFile { get; set; }
+        public string? ShapeDesc { get; set; }
 
         // Output
         public string OutputFile { get; set; } = "output.png";
@@ -39,11 +39,13 @@ namespace Msdfgen.Cli
         public bool PrintMetrics { get; set; } = false;
 
         // Extras
-        public string ExportShapeFile { get; set; }
-        public string TestRenderFile { get; set; }
-        public int TestRenderWidth { get; set; }
-        public int TestRenderHeight { get; set; }
+        public string? ExportShapeFile { get; set; }
+        public string? TestRenderFile { get; set; }
+        public int TestRenderWidth { get; set; } = 512;
+        public int TestRenderHeight { get; set; } = 512;
+        public bool TestRenderSpecified { get; set; } = false;
         
-        public bool IsHelp { get; set; }
+        public bool IsHelp { get; set; } = false;
+        public bool OutputFileSpecified { get; set; } = false;
     }
 }

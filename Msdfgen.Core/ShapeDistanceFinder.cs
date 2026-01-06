@@ -26,7 +26,8 @@ namespace Msdfgen
             for (int i = 0; i < shape.Contours.Count; ++i)
             {
                 Contour contour = shape.Contours[i];
-                dynamic edgeSelector = ((dynamic)contourCombiner).EdgeSelector(i);
+                // Although contourCombiner might be generic, we expect EdgeSelector to return an IEdgeSelector
+                IEdgeSelector edgeSelector = (IEdgeSelector)((dynamic)contourCombiner).EdgeSelector(i);
                 for (int j = 0; j < contour.Edges.Count; ++j)
                 {
                     shapeEdgeCache.Add(edgeSelector.CreateEdgeCache());
@@ -43,7 +44,7 @@ namespace Msdfgen
                 Contour contour = shape.Contours[i];
                 if (contour.Edges.Count == 0) continue;
 
-                dynamic edgeSelector = ((dynamic)contourCombiner).EdgeSelector(i);
+                IEdgeSelector edgeSelector = (IEdgeSelector)((dynamic)contourCombiner).EdgeSelector(i);
                 EdgeSegment prevEdge = contour.Edges[contour.Edges.Count - 1];
                 
                 for (int j = 0; j < contour.Edges.Count; ++j)
@@ -52,7 +53,7 @@ namespace Msdfgen
                     EdgeSegment nextEdge = contour.Edges[(j + 1) % contour.Edges.Count];
                     
                     // Use the persistent cache object
-                    dynamic cache = shapeEdgeCache[edgeIndex++];
+                    object cache = shapeEdgeCache[edgeIndex++];
                     edgeSelector.AddEdge(cache, prevEdge, edge, nextEdge);
                     
                     prevEdge = edge;
