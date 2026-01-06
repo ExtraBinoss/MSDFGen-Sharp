@@ -2,14 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using SixLabors.Fonts;
 using Msdfgen;
 using Msdfgen.Extensions;
-
-namespace Msdfgen.Cli
-{
-using System;
-using System.Globalization;
 
 namespace Msdfgen.Cli
 {
@@ -31,5 +25,4 @@ namespace Msdfgen.Cli
             processor.Process(options);
         }
     }
-}
 }

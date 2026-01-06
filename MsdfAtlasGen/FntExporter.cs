@@ -5,7 +5,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Collections.Generic;
 using Msdfgen;
-using SixLabors.Fonts;
+using Typography.OpenFont;
 
 namespace MsdfAtlasGen
 {
@@ -118,7 +118,7 @@ namespace MsdfAtlasGen
             double distanceRange,
             string pngFilename,
             string outputFilename,
-            Font sourceFont,
+            Typeface sourceTypeface,
             float lineHeight,
             float baseLine,
             float appliedScale,
@@ -136,7 +136,7 @@ namespace MsdfAtlasGen
             {
                 Info = new BmFontInfo
                 {
-                    Face = sourceFont.Name ?? "Unknown",
+                    Face = sourceTypeface?.Name ?? "Unknown",
                     Size = (int)fontSize,
                     Unicode = 1,
                     Padding = $"{(int)padding},{(int)padding},{(int)padding},{(int)padding}"
@@ -168,21 +168,20 @@ namespace MsdfAtlasGen
                 Kernings = new BmFontKernings()
             };
 
-            // Export each glyph using SixLabors for advance and font metrics
+            // Export each glyph using Typography.OpenFont for advance and metrics
             foreach (var glyph in font.GetGlyphs().Glyphs)
             {
                 glyph.GetBoxRect(out int x, out int y, out int w, out int h);
 
-                // Get glyph from source font
+                // Get glyph info from source typeface
                 int glyphIndex = glyph.GetIndex();
-                var cp = new SixLabors.Fonts.Unicode.CodePoint((char)glyph.GetCodepoint());
-                
-                // Get advance width from sourceFont metrics
+                // Get advance width from source typeface
                 float xadvance = (float)glyph.GetAdvanceUnscaled();
-                if (sourceFont.FontMetrics.TryGetGlyphMetrics(cp, TextAttributes.None, TextDecorations.None, LayoutMode.HorizontalTopBottom, ColorFontSupport.None, out var metricsList) && metricsList.Count > 0)
+                if (glyphIndex >= 0)
                 {
-                    var gm = metricsList[0];
-                    xadvance = (float)(gm.AdvanceWidth * appliedScale);
+                    xadvance = sourceTypeface != null
+                        ? sourceTypeface.GetAdvanceWidthFromGlyphIndex((ushort)glyphIndex) * appliedScale
+                        : xadvance;
                 }
                 
                 // Use plane bounds for xoffset/yoffset (matching working FntWriter logic)

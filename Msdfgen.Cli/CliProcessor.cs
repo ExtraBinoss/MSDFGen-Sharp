@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using SixLabors.Fonts;
 using Msdfgen;
 using Msdfgen.Extensions;
 
@@ -57,23 +56,9 @@ namespace Msdfgen.Cli
 
         private Shape? LoadShape(CliOptions options)
         {
-            Shape? shape = null;
-            if (options.FontFile != null)
-            {
-                try 
-                {
-                    var collection = new FontCollection();
-                    var family = collection.Add(options.FontFile);
-                    var font = family.CreateFont(12, FontStyle.Regular);
-                    shape = FontLoader.LoadShape(font, options.CharCode);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error loading font: {ex.Message}");
-                }
-            }
-            if (shape == null) Console.WriteLine("No valid shape loaded.");
-            return shape;
+            Console.WriteLine("Font loading via SixLabors has been removed. Font loading is now handled by Typography.OpenFont in MsdfAtlasGen.Cli.");
+            Console.WriteLine("Please use MsdfAtlasGen.Cli for font-based atlas generation.");
+            return null;
         }
 
         private void PrintShapeInfo(Shape shape)

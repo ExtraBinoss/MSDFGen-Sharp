@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Msdfgen;
-using SixLabors.Fonts;
+using Typography.OpenFont;
 
 namespace MsdfAtlasGen.Cli
 {
@@ -54,24 +54,13 @@ namespace MsdfAtlasGen.Cli
 
         public int Run()
         {
-            // 1. Load Font
-            Font font;
+            // 1. Load Typeface (Typography.OpenFont)
+            Typeface typeface;
             try
             {
-                var fontCollection = new FontCollection();
-                var fontFamily = fontCollection.Add(_config.FontPath);
-                
-                // Load font with size = UnitsPerEm.
-                // This ensures that shape coordinates are in Font Units, which allows FontGeometry to correctly normalize them.
-                // If we loaded with _config.Size (e.g. 32), shapes would be 32px, but FontGeometry divides by UPEM (2048), resulting in tiny glyphs.
-                // By loading at UPEM size, shape = 2048 units, divided by 2048 = 1.0 EM.
-                // FntExporter then multiplies by _config.Size to get back to 32px.
-                
-                // Create temp font to get UPEM
-                var tempFont = fontFamily.CreateFont(16);
-                int upem = tempFont.FontMetrics.UnitsPerEm; // Available on instance metrics
-                
-                font = fontFamily.CreateFont(upem);
+                using var fs = File.OpenRead(_config.FontPath);
+                var reader = new OpenFontReader();
+                typeface = reader.Read(fs);
             }
             catch (Exception ex)
             {
@@ -159,7 +148,7 @@ namespace MsdfAtlasGen.Cli
 
             // FontScale is an additional scale multiplier; Size is the primary font size
             // Pass Size * FontScale as the geometry scale
-            fontGeometry.LoadCharset(font, _config.Size * _config.FontScale, charset);
+            fontGeometry.LoadCharset(typeface, _config.Size * _config.FontScale, charset);
             fontGeometry.SetName(fontName);
 
             // 5. Edge Coloring
@@ -202,16 +191,16 @@ namespace MsdfAtlasGen.Cli
             }
 
             int result = packer.Pack(glyphs);
-            if (result != 0)
+            if (result < 0)
             {
                 Console.Error.WriteLine("Packing failed");
                 return 1;
             }
 
-            packer.GetDimensions(out int width, out int height);
-            Console.WriteLine($"Atlas Dimensions: {width}x{height}");
-
-            // 7. Generate
+            // 7. Generate MSDF atlas
+            int width, height;
+            packer.GetDimensions(out width, out height);
+            
             var generatorAttributes = new GeneratorAttributes
             {
                 Config = new MSDFGeneratorConfig(true, ErrorCorrectionConfig.Default),
@@ -280,12 +269,13 @@ namespace MsdfAtlasGen.Cli
                 Console.WriteLine($"Saving FNT to: {fntOut}");
                 double distanceRange = _config.PxRange.Upper - _config.PxRange.Lower;
                 
-                // Get font metrics for FNT export
-                var fontMetrics = font.FontMetrics;
-                var hm = fontMetrics.HorizontalMetrics;
-                float lineHeight = (float)(hm.LineHeight * _config.Size / fontMetrics.UnitsPerEm);
-                float baseLine = (float)(hm.Ascender * _config.Size / fontMetrics.UnitsPerEm);
-                float appliedScale = (float)(_config.Size / fontMetrics.UnitsPerEm);
+                // Get font metrics for FNT export from typeface
+                float appliedScale = (float)(_config.Size / (float)typeface.UnitsPerEm);
+                float asc = typeface.Ascender;
+                float desc = typeface.Descender;
+                float lineGap = typeface.LineGap;
+                float lineHeight = (asc - desc + lineGap) * appliedScale;
+                float baseLine = asc * appliedScale;
                 
                 FntExporter.Export(
                     fonts.ToArray(),
@@ -296,7 +286,7 @@ namespace MsdfAtlasGen.Cli
                     distanceRange,
                     imageOut,
                     fntOut,
-                    font,
+                    typeface,
                     lineHeight,
                     baseLine,
                     appliedScale,

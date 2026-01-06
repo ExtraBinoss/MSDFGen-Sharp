@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Msdfgen;
-// using Msdfgen.Extensions; // Referenced project
-using SixLabors.Fonts; // Referenced via Extensions or directly if added
+using Typography.OpenFont;
 
 namespace MsdfAtlasGen
 {
@@ -44,39 +43,20 @@ namespace MsdfAtlasGen
         {
         }
 
-        public bool Load(Font font, double geometryScale, char character, bool preprocessGeometry = true)
+        public bool Load(Typeface typeface, double geometryScale, char character, bool preprocessGeometry = true)
         {
-            // Msdfgen.Extensions.FontLoader must be available.
-            // Assuming FontLoader.LoadShape returns a Shape. 
-            // We need to handle dependencies.
-            // For now, using reflection or assuming the reference is there.
-            
-            // Note: Msdfgen.Extensions.FontLoader.LoadShape(font, character) returns Shape.
-            // We need advance. SixLabors.Fonts can provide it.
-            
-            _shape = Msdfgen.Extensions.FontLoader.LoadShape(font, character);
+            // Build glyph shape directly from Typography.OpenFont
+            _shape = BuildShape(typeface, (int)character);
             if (_shape != null && _shape.Validate())
             {
                 _codepoint = character;
                 _geometryScale = geometryScale;
-
-                // Resolve glyph index and advance directly from SixLabors metrics
-                var cp = new SixLabors.Fonts.Unicode.CodePoint(character);
-                var fm = font.FontMetrics;
-                if (fm.TryGetGlyphMetrics(cp, TextAttributes.None, TextDecorations.None, LayoutMode.HorizontalTopBottom, ColorFontSupport.None, out var metricsList) && metricsList.Count > 0)
-                {
-                    var gm = metricsList[0];
-                    _index = (int)gm.GlyphId;
-                    // AdvanceWidth is in font design units; convert to pixels using geometryScale (size / unitsPerEm)
-                    _advanceUnscaled = gm.AdvanceWidth * _geometryScale;
-                    _advance = _advanceUnscaled;
-                }
-                else
-                {
-                    _index = 0;
-                    _advanceUnscaled = 0;
-                    _advance = 0;
-                }
+                // Resolve glyph index and advance from OpenFont
+                ushort glyphIndex = typeface.GetGlyphIndex((int)character);
+                _index = glyphIndex;
+                double adv = typeface.GetAdvanceWidthFromGlyphIndex(glyphIndex);
+                _advanceUnscaled = adv * _geometryScale;
+                _advance = _advanceUnscaled;
 
                 if (preprocessGeometry)
                 {
@@ -89,11 +69,123 @@ namespace MsdfAtlasGen
                 _bounds = _shape.GetBounds();
                 _boundsUnscaled = _bounds;
 
-                // Validation/Winding check ignored for now or assumed correct by FontLoader
+                // Validation/Winding check ignored for now
                 
                 return true;
             }
             return false;
+        }
+
+        private static Shape BuildShape(Typeface typeface, int codepoint)
+        {
+            ushort glyphIndex = typeface.GetGlyphIndex(codepoint);
+            return BuildShapeByGlyphIndex(typeface, glyphIndex);
+        }
+
+        private static Shape BuildShapeByGlyphIndex(Typeface typeface, ushort glyphIndex)
+        {
+            var shape = new Shape();
+            var tx = new ShapeGlyphTranslator(shape);
+
+            var glyph = typeface.GetGlyph(glyphIndex);
+            if (glyph == null)
+                return shape;
+
+            if (glyph.GlyphPoints != null && glyph.EndPoints != null)
+            {
+                Typography.OpenFont.IGlyphTranslator translator = tx;
+                Typography.OpenFont.IGlyphReaderExtensions.Read(translator, glyph.GlyphPoints, glyph.EndPoints, 1f);
+            }
+
+            shape.SetYAxisOrientation(YAxisOrientation.Upward);
+            return shape;
+        }
+
+        private sealed class ShapeGlyphTranslator : Typography.OpenFont.IGlyphTranslator
+        {
+            private readonly Shape _shape;
+            private Contour _current;
+            private Msdfgen.Vector2 _currentPoint;
+            private Msdfgen.Vector2 _startPoint;
+            private bool _contourOpen;
+
+            public ShapeGlyphTranslator(Shape shape)
+            {
+                _shape = shape;
+            }
+
+            public void BeginRead(int contourCount)
+            {
+                _current = null;
+                _contourOpen = false;
+            }
+
+            public void EndRead()
+            {
+            }
+
+            public void MoveTo(float x0, float y0)
+            {
+                _current = new Contour();
+                _shape.AddContour(_current);
+                _startPoint = new Msdfgen.Vector2(x0, y0);
+                _currentPoint = _startPoint;
+                _contourOpen = true;
+            }
+
+            public void LineTo(float x1, float y1)
+            {
+                if (!_contourOpen) return;
+                var p1 = new Msdfgen.Vector2(x1, y1);
+                if (!ApproximatelyEqual(_currentPoint, p1))
+                {
+                    _current.AddEdge(new LinearSegment(_currentPoint, p1));
+                    _currentPoint = p1;
+                }
+            }
+
+            public void Curve3(float x1, float y1, float x2, float y2)
+            {
+                if (!_contourOpen) return;
+                var c = new Msdfgen.Vector2(x1, y1);
+                var p = new Msdfgen.Vector2(x2, y2);
+                if (!ApproximatelyEqual(_currentPoint, p))
+                {
+                    _current.AddEdge(new QuadraticSegment(_currentPoint, c, p));
+                    _currentPoint = p;
+                }
+            }
+
+            public void Curve4(float x1, float y1, float x2, float y2, float x3, float y3)
+            {
+                if (!_contourOpen) return;
+                var c1 = new Msdfgen.Vector2(x1, y1);
+                var c2 = new Msdfgen.Vector2(x2, y2);
+                var p = new Msdfgen.Vector2(x3, y3);
+                if (!ApproximatelyEqual(_currentPoint, p) || Msdfgen.Vector2.CrossProduct(c1 - p, c2 - p) != 0)
+                {
+                    _current.AddEdge(new CubicSegment(_currentPoint, c1, c2, p));
+                    _currentPoint = p;
+                }
+            }
+
+            public void CloseContour()
+            {
+                if (_contourOpen)
+                {
+                    if (!ApproximatelyEqual(_currentPoint, _startPoint))
+                    {
+                        _current.AddEdge(new LinearSegment(_currentPoint, _startPoint));
+                        _currentPoint = _startPoint;
+                    }
+                    _contourOpen = false;
+                }
+            }
+
+            private static bool ApproximatelyEqual(Msdfgen.Vector2 a, Msdfgen.Vector2 b)
+            {
+                return Math.Abs(a.X - b.X) < 0.0001 && Math.Abs(a.Y - b.Y) < 0.0001;
+            }
         }
 
         public void EdgeColoring(EdgeColoringDelegate fn, double angleThreshold, ulong seed)
