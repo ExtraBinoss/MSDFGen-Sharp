@@ -8,6 +8,9 @@ Generate multi-channel signed distance field (MSDF) font atlases using FreeType.
 
 ## Quick Start (Run from this folder)
 ```bash
+#Best results
+dotnet run -c Release -- -font "../test_fonts/Roboto-Regular.ttf" -size 90 -dimensions 1024 1024 -fnt -testrender -spacing 2 -aouterpxpadding 5 5 5 5
+
 # Minimal: PNG + FNT (BMFont) outputs
 dotnet run -c Release -- -font "../test_fonts/Roboto-Regular.ttf" -size 90 -dimensions 1024 1024 -fnt
 
