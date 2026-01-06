@@ -279,6 +279,14 @@ namespace MsdfAtlasGen.Cli
             {
                 Console.WriteLine($"Saving FNT to: {fntOut}");
                 double distanceRange = _config.PxRange.Upper - _config.PxRange.Lower;
+                
+                // Get font metrics for FNT export
+                var fontMetrics = font.FontMetrics;
+                var hm = fontMetrics.HorizontalMetrics;
+                float lineHeight = (float)(hm.LineHeight * _config.Size / fontMetrics.UnitsPerEm);
+                float baseLine = (float)(hm.Ascender * _config.Size / fontMetrics.UnitsPerEm);
+                float appliedScale = (float)(_config.Size / fontMetrics.UnitsPerEm);
+                
                 FntExporter.Export(
                     fonts.ToArray(),
                     _config.Type,
@@ -288,6 +296,10 @@ namespace MsdfAtlasGen.Cli
                     distanceRange,
                     imageOut,
                     fntOut,
+                    font,
+                    lineHeight,
+                    baseLine,
+                    appliedScale,
                     _config.YOrigin,
                     _config.OuterPxPadding
                 );

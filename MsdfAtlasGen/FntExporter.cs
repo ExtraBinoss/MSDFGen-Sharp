@@ -2,12 +2,110 @@ using System;
 using System.IO;
 using System.Text;
 using System.Xml;
+using System.Xml.Serialization;
+using System.Collections.Generic;
 using Msdfgen;
+using SixLabors.Fonts;
 
 namespace MsdfAtlasGen
 {
+    // BMFont XML classes (serialization)
+    [XmlRoot("font")]
+    public class BmFont
+    {
+        [XmlElement("info")] public required BmFontInfo Info { get; set; }
+        [XmlElement("common")] public required BmFontCommon Common { get; set; }
+        [XmlElement("pages")] public required BmFontPages Pages { get; set; }
+        [XmlElement("distanceField")] public required BmFontDistanceField DistanceField { get; set; }
+        [XmlElement("chars")] public required BmFontChars Chars { get; set; }
+        [XmlElement("kernings")] public required BmFontKernings Kernings { get; set; }
+    }
+
+    public class BmFontInfo
+    {
+        [XmlAttribute("face")] public required string Face { get; set; }
+        [XmlAttribute("size")] public int Size { get; set; }
+        [XmlAttribute("bold")] public int Bold { get; set; } = 0;
+        [XmlAttribute("italic")] public int Italic { get; set; } = 0;
+        [XmlAttribute("charset")] public string Charset { get; set; } = "";
+        [XmlAttribute("unicode")] public int Unicode { get; set; } = 0;
+        [XmlAttribute("stretchH")] public int StretchH { get; set; } = 100;
+        [XmlAttribute("smooth")] public int Smooth { get; set; } = 1;
+        [XmlAttribute("aa")] public int Aa { get; set; } = 1;
+        [XmlAttribute("padding")] public string Padding { get; set; } = "0,0,0,0";
+        [XmlAttribute("spacing")] public string Spacing { get; set; } = "1,1";
+        [XmlAttribute("outline")] public int Outline { get; set; } = 0;
+    }
+
+    public class BmFontCommon
+    {
+        [XmlAttribute("lineHeight")] public int LineHeight { get; set; }
+        [XmlAttribute("base")] public int Base { get; set; }
+        [XmlAttribute("scaleW")] public int ScaleW { get; set; }
+        [XmlAttribute("scaleH")] public int ScaleH { get; set; }
+        [XmlAttribute("pages")] public int Pages { get; set; } = 1;
+        [XmlAttribute("packed")] public int Packed { get; set; } = 0;
+        [XmlAttribute("alphaChnl")] public int AlphaChnl { get; set; } = 0;
+        [XmlAttribute("redChnl")] public int RedChnl { get; set; } = 0;
+        [XmlAttribute("greenChnl")] public int GreenChnl { get; set; } = 0;
+        [XmlAttribute("blueChnl")] public int BlueChnl { get; set; } = 0;
+    }
+
+    public class BmFontPages
+    {
+        [XmlElement("page")] public List<BmFontPage> PageList { get; set; } = [];
+    }
+
+    public class BmFontPage
+    {
+        [XmlAttribute("id")] public int Id { get; set; }
+        [XmlAttribute("file")] public required string File { get; set; }
+    }
+
+    public class BmFontDistanceField
+    {
+        [XmlAttribute("fieldType")] public required string FieldType { get; set; }
+        [XmlAttribute("distanceRange")] public int DistanceRange { get; set; }
+    }
+
+    public class BmFontChars
+    {
+        [XmlAttribute("count")] public int Count { get; set; }
+        [XmlElement("char")] public List<BmFontChar> CharList { get; set; } = [];
+    }
+
+    public class BmFontChar
+    {
+        [XmlAttribute("id")] public int Id { get; set; }
+        [XmlAttribute("index")] public int Index { get; set; }
+        [XmlAttribute("char")] public required string Char { get; set; }
+        [XmlAttribute("width")] public int Width { get; set; }
+        [XmlAttribute("height")] public int Height { get; set; }
+        [XmlAttribute("xoffset")] public int XOffset { get; set; }
+        [XmlAttribute("yoffset")] public int YOffset { get; set; }
+        [XmlAttribute("xadvance")] public int XAdvance { get; set; }
+        [XmlAttribute("chnl")] public int Chnl { get; set; } = 15;
+        [XmlAttribute("x")] public int X { get; set; }
+        [XmlAttribute("y")] public int Y { get; set; }
+        [XmlAttribute("page")] public int Page { get; set; } = 0;
+    }
+
+    public class BmFontKernings
+    {
+        [XmlAttribute("count")] public int Count { get; set; } = 0;
+        [XmlElement("kerning")] public List<BmFontKerning> KerningList { get; set; } = [];
+    }
+
+    public class BmFontKerning
+    {
+        [XmlAttribute("first")] public int First { get; set; }
+        [XmlAttribute("second")] public int Second { get; set; }
+        [XmlAttribute("amount")] public int Amount { get; set; }
+    }
+
     /// <summary>
     /// Exports font atlas data to BMFont XML format (.fnt)
+    /// Uses Typography.OpenFont for accurate glyph bounds extraction
     /// </summary>
     public static class FntExporter
     {
@@ -20,184 +118,105 @@ namespace MsdfAtlasGen
             double distanceRange,
             string pngFilename,
             string outputFilename,
+            Font sourceFont,
+            float lineHeight,
+            float baseLine,
+            float appliedScale,
             YAxisOrientation yDirection = YAxisOrientation.Downward,
             Padding? outerPixelPadding = null)
         {
             if (fonts.Length == 0) return;
 
-            var font = fonts[0]; // For now, just use first font
-            var settings = new XmlWriterSettings
+            var font = fonts[0]; // Use first font
+
+            // Calculate padding: Range/2 (from DoubleRange) + 2 (from SetOuterPixelPadding)
+            float padding = (float)(distanceRange / 2.0) + 2.0f;
+
+            var bmFont = new BmFont
             {
-                Indent = true,
-                IndentChars = "    ",
-                NewLineChars = "\r\n",
-                Encoding = Encoding.UTF8
+                Info = new BmFontInfo
+                {
+                    Face = sourceFont.Name ?? "Unknown",
+                    Size = (int)fontSize,
+                    Unicode = 1,
+                    Padding = $"{(int)padding},{(int)padding},{(int)padding},{(int)padding}"
+                },
+                Common = new BmFontCommon
+                {
+                    LineHeight = (int)Math.Ceiling(lineHeight),
+                    Base = (int)Math.Ceiling(baseLine),
+                    ScaleW = atlasWidth,
+                    ScaleH = atlasHeight
+                },
+                Pages = new BmFontPages
+                {
+                    PageList = [new BmFontPage { Id = 0, File = Path.GetFileName(pngFilename) }]
+                },
+                DistanceField = new BmFontDistanceField
+                {
+                    FieldType = imageType switch
+                    {
+                        ImageType.Sdf => "sdf",
+                        ImageType.Psdf => "psdf",
+                        ImageType.Msdf => "msdf",
+                        ImageType.Mtsdf => "mtsdf",
+                        _ => "sdf"
+                    },
+                    DistanceRange = (int)distanceRange
+                },
+                Chars = new BmFontChars { Count = 0 },
+                Kernings = new BmFontKernings()
             };
 
-            using var stream = new FileStream(outputFilename, FileMode.Create);
-            using var writer = XmlWriter.Create(stream, settings);
-
-            writer.WriteStartDocument();
-            writer.WriteStartElement("font");
-
-            // <info> element
-            var metrics = font.GetMetrics();
-            writer.WriteStartElement("info");
-            writer.WriteAttributeString("face", font.GetName() ?? "Unknown");
-            writer.WriteAttributeString("size", ((int)fontSize).ToString());
-            writer.WriteAttributeString("bold", "0");
-            writer.WriteAttributeString("italic", "0");
-            writer.WriteAttributeString("charset", "");
-            writer.WriteAttributeString("unicode", "1");
-            writer.WriteAttributeString("stretchH", "100");
-            writer.WriteAttributeString("smooth", "1");
-            writer.WriteAttributeString("aa", "1");
-            // Padding in FNT is the atlas padding used during generation
-            int infoPadding;
-            if (outerPixelPadding.HasValue)
-            {
-                // Use the outer pixel padding that was applied
-                Padding pad = outerPixelPadding.Value;
-                int padL = (int)pad.L;
-                int padR = (int)pad.R;
-                int padT = (int)pad.T;
-                int padB = (int)pad.B;
-                infoPadding = (padL + padR + padT + padB) / 4; // Average of all sides
-            }
-            else
-            {
-                infoPadding = (int)(distanceRange / 2.0) + 2; // Fallback: Range/2 + outer padding
-            }
-            writer.WriteAttributeString("padding", $"{infoPadding},{infoPadding},{infoPadding},{infoPadding}");
-            writer.WriteAttributeString("spacing", "0,0");
-            writer.WriteAttributeString("outline", "0");
-            writer.WriteEndElement();
-
-            // <common> element
-            writer.WriteStartElement("common");
-            writer.WriteAttributeString("lineHeight", ((int)(metrics.LineHeight * fontSize / metrics.EmSize)).ToString());
-            writer.WriteAttributeString("base", ((int)(metrics.AscenderY * fontSize / metrics.EmSize)).ToString());
-            writer.WriteAttributeString("scaleW", atlasWidth.ToString());
-            writer.WriteAttributeString("scaleH", atlasHeight.ToString());
-            writer.WriteAttributeString("pages", "1");
-            writer.WriteAttributeString("packed", "0");
-            writer.WriteAttributeString("alphaChnl", "0");
-            writer.WriteAttributeString("redChnl", "0");
-            writer.WriteAttributeString("greenChnl", "0");
-            writer.WriteAttributeString("blueChnl", "0");
-            writer.WriteEndElement();
-
-            // <pages> element
-            writer.WriteStartElement("pages");
-            writer.WriteStartElement("page");
-            writer.WriteAttributeString("id", "0");
-            writer.WriteAttributeString("file", Path.GetFileName(pngFilename));
-            writer.WriteEndElement();
-            writer.WriteEndElement();
-
-            // <distanceField> element (MSDF specific)
-            if (imageType == ImageType.Sdf || imageType == ImageType.Psdf || 
-                imageType == ImageType.Msdf || imageType == ImageType.Mtsdf)
-            {
-                writer.WriteStartElement("distanceField");
-                string fieldType = imageType switch
-                {
-                    ImageType.Sdf => "sdf",
-                    ImageType.Psdf => "psdf",
-                    ImageType.Msdf => "msdf",
-                    ImageType.Mtsdf => "mtsdf",
-                    _ => "sdf"
-                };
-                writer.WriteAttributeString("fieldType", fieldType);
-                writer.WriteAttributeString("distanceRange", ((int)distanceRange).ToString());
-                writer.WriteEndElement();
-            }
-
-            // <chars> element
-            var glyphs = font.GetGlyphs().Glyphs;
-            int count = 0;
-            foreach (var _ in glyphs) count++;
-
-            writer.WriteStartElement("chars");
-            writer.WriteAttributeString("count", count.ToString());
-
+            // Export each glyph using SixLabors for advance and font metrics
             foreach (var glyph in font.GetGlyphs().Glyphs)
             {
-                glyph.GetQuadAtlasBounds(out double al, out double ab, out double ar, out double at);
+                glyph.GetBoxRect(out int x, out int y, out int w, out int h);
+
+                // Get glyph from source font
+                int glyphIndex = glyph.GetIndex();
+                var cp = new SixLabors.Fonts.Unicode.CodePoint((char)glyph.GetCodepoint());
+                
+                // Get advance width from sourceFont metrics
+                float xadvance = (float)glyph.GetAdvanceUnscaled();
+                if (sourceFont.FontMetrics.TryGetGlyphMetrics(cp, TextAttributes.None, TextDecorations.None, LayoutMode.HorizontalTopBottom, ColorFontSupport.None, out var metricsList) && metricsList.Count > 0)
+                {
+                    var gm = metricsList[0];
+                    xadvance = (float)(gm.AdvanceWidth * appliedScale);
+                }
+                
+                // Use plane bounds for xoffset/yoffset (matching working FntWriter logic)
                 glyph.GetQuadPlaneBounds(out double pl, out double pb, out double pr, out double pt);
                 
-                int width = (int)Math.Round(ar - al);
-                int height = (int)Math.Round(at - ab);
-                
-                // Atlas coordinates - handle Y-axis orientation
-                // GetQuadAtlasBounds returns coordinates in atlas space
-                // al, ab = left, bottom  |  ar, at = right, top
-                int x = (int)Math.Round(al);
-                int y;
-                
-                if (yDirection == YAxisOrientation.Downward)
+                float xoffset = (float)(pl * appliedScale) - padding;
+                float yoffset = baseLine - (float)(pt * appliedScale) - padding;
+
+                int codepoint = (int)glyph.GetCodepoint();
+
+                bmFont.Chars.CharList.Add(new BmFontChar
                 {
-                    // BMFont uses top-left origin, but atlas may use bottom-left
-                    // Flip Y: y_bmfont = atlasHeight - y_bottom_up - height
-                    y = (int)Math.Round(atlasHeight - at);
-                }
-                else
-                {
-                    // Top-left origin already
-                    y = (int)Math.Round(ab);
-                }
-                
-                // BMFont format:
-                // xoffset: offset from current cursor position to left edge of glyph (in pixels)
-                // yoffset: offset from baseline to top of glyph
-                // xadvance: horizontal advance (distance to move cursor after rendering)
-
-                // pl/pb/pr/pt are plane-space bounds after geometry scaling (pixels at target size)
-                int xoffset = (int)Math.Round(pl);
-                int yoffset = (int)Math.Round(metrics.AscenderY - pt);
-
-                // Advance already in pixels at target size
-                int xadvance = (int)Math.Round(glyph.GetAdvanceUnscaled());
-
-                writer.WriteStartElement("char");
-                writer.WriteAttributeString("id", glyph.GetCodepoint().ToString());
-                writer.WriteAttributeString("index", glyph.GetIndex().ToString());
-                
-                // Write char attribute with XML escaping for special chars
-                char c = (char)glyph.GetCodepoint();
-                if (c == '"') 
-                    writer.WriteAttributeString("char", "&quot;");
-                else if (c == '<')
-                    writer.WriteAttributeString("char", "&lt;");
-                else if (c == '>')
-                    writer.WriteAttributeString("char", "&gt;");
-                else if (c == '&')
-                    writer.WriteAttributeString("char", "&amp;");
-                else if (char.IsControl(c) || c == ' ')
-                    writer.WriteAttributeString("char", " ");
-                else
-                    writer.WriteAttributeString("char", c.ToString());
-
-                writer.WriteAttributeString("width", width.ToString());
-                writer.WriteAttributeString("height", height.ToString());
-                writer.WriteAttributeString("xoffset", xoffset.ToString());
-                writer.WriteAttributeString("yoffset", yoffset.ToString());
-                writer.WriteAttributeString("xadvance", xadvance.ToString());
-                writer.WriteAttributeString("chnl", "15");
-                writer.WriteAttributeString("x", x.ToString());
-                writer.WriteAttributeString("y", y.ToString());
-                writer.WriteAttributeString("page", "0");
-                writer.WriteEndElement();
+                    Id = codepoint,
+                    Index = glyphIndex,
+                    Char = char.ConvertFromUtf32(codepoint),
+                    Width = w,
+                    Height = h,
+                    XOffset = (int)Math.Round(xoffset),
+                    YOffset = (int)Math.Round(yoffset),
+                    XAdvance = (int)Math.Round(xadvance),
+                    Chnl = 15,
+                    X = x,
+                    // Flip Y coordinate: BMFont uses Top-Left origin
+                    Y = atlasHeight - y - h,
+                    Page = 0
+                });
             }
-            writer.WriteEndElement(); // chars
 
-            // <kernings> element (empty for now)
-            writer.WriteStartElement("kernings");
-            writer.WriteAttributeString("count", "0");
-            writer.WriteEndElement();
+            bmFont.Chars.Count = bmFont.Chars.CharList.Count;
 
-            writer.WriteEndElement(); // font
-            writer.WriteEndDocument();
+            // Serialize to XML
+            var serializer = new XmlSerializer(typeof(BmFont));
+            using var stream = new StreamWriter(outputFilename);
+            serializer.Serialize(stream, bmFont);
         }
     }
 }
