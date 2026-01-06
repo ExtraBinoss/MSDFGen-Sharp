@@ -34,10 +34,11 @@ namespace MsdfAtlasGen
             var rectangleGlyphs = new List<GlyphGeometry>(glyphs.Length);
             
             var attribs = new GlyphGeometry.GlyphAttributes();
-            attribs.Scale = scale;
-            attribs.Range = _unitRange + _pxRange / scale;
-            attribs.InnerPadding = _innerUnitPadding + _innerPxPadding / scale;
-            attribs.OuterPadding = _outerUnitPadding + _outerPxPadding / scale;
+            // Pixels-per-font-unit: packer scale * glyph geometry scale.
+            attribs.Scale = scale; // will be overridden per glyph below
+            attribs.Range = _unitRange; // base; per-glyph addition below
+            attribs.InnerPadding = _innerUnitPadding;
+            attribs.OuterPadding = _outerUnitPadding;
             attribs.MiterLimit = _miterLimit;
             attribs.PxAlignOriginX = _pxAlignOriginX;
             attribs.PxAlignOriginY = _pxAlignOriginY;
@@ -46,6 +47,12 @@ namespace MsdfAtlasGen
             {
                 if (!glyph.IsWhitespace())
                 {
+                    double pixelsPerUnit = scale * glyph.GetGeometryScale();
+                    attribs.Scale = pixelsPerUnit;
+                    attribs.Range = _unitRange + _pxRange / pixelsPerUnit;
+                    attribs.InnerPadding = _innerUnitPadding + _innerPxPadding / pixelsPerUnit;
+                    attribs.OuterPadding = _outerUnitPadding + _outerPxPadding / pixelsPerUnit;
+
                     glyph.WrapBox(attribs);
                     glyph.GetBoxSize(out int w, out int h);
                     if (w > 0 && h > 0)

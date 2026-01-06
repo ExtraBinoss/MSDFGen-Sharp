@@ -139,37 +139,25 @@ namespace MsdfAtlasGen
         public bool LoadMetrics(Font font, double fontScale)
         {
             if (font == null) return false;
-            
-            SixLabors.Fonts.FontMetrics metrics = font.FontMetrics;
-            
-            // Get font metrics from SixLabors.Fonts
-            // FontMetrics contains UnitsPerEm
-            _metrics.EmSize = metrics.UnitsPerEm;
-            
-            // For ascender/descender, use typical values based on a standard font
-            // In SixLabors.Fonts, we can estimate from LineHeight or use defaults
-            // Typically: Ascender ~= 0.8 * UnitsPerEm, Descender ~= -0.2 * UnitsPerEm
-            // For simplicity, use: Ascender = 80% of UPEM, Descender = -20% of UPEM
-            int upem = (int)_metrics.EmSize;
-            _metrics.AscenderY = (int)(upem * 0.8);  // Typical for most fonts
-            _metrics.DescenderY = (int)(upem * -0.2);  // Typical for most fonts
-            
-            // LineHeight = Ascender - Descender + some gap
-            _metrics.LineHeight = _metrics.AscenderY - _metrics.DescenderY;
-            
-            _metrics.UnderlineY = 0;  // Not directly available, use 0
-            _metrics.UnderlineThickness = 0;  // Not directly available, use 0
 
-            if (_metrics.EmSize <= 0)
-                _metrics.EmSize = DefaultFontUnitsPerEm;
+            // Use the actual font metrics from SixLabors instead of heuristics so offsets/line height
+            // align with the source font (fixes squished / misaligned text in exported FNT).
+            var metrics = font.FontMetrics;
 
-            _geometryScale = fontScale / _metrics.EmSize;
-            _metrics.EmSize *= _geometryScale;
-            _metrics.AscenderY *= _geometryScale;
-            _metrics.DescenderY *= _geometryScale;
-            _metrics.LineHeight *= _geometryScale;
-            _metrics.UnderlineY *= _geometryScale;
-            _metrics.UnderlineThickness *= _geometryScale;
+            double unitsPerEm = metrics.UnitsPerEm <= 0 ? DefaultFontUnitsPerEm : metrics.UnitsPerEm;
+            _geometryScale = fontScale / unitsPerEm; // scale to requested pixel size
+
+            _metrics.EmSize = unitsPerEm * _geometryScale;
+
+            // Pull vertical metrics from the horizontal set (most atlas users render horizontally).
+            var hm = metrics.HorizontalMetrics;
+            _metrics.AscenderY = hm.Ascender * _geometryScale;
+            _metrics.DescenderY = hm.Descender * _geometryScale; // typically negative
+            _metrics.LineHeight = hm.LineHeight * _geometryScale;
+
+            // Underline info is rarely needed for atlas export; keep zeroed if unavailable.
+            _metrics.UnderlineY = metrics.UnderlinePosition * _geometryScale;
+            _metrics.UnderlineThickness = metrics.UnderlineThickness * _geometryScale;
 
             return true;
         }

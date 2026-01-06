@@ -96,9 +96,10 @@ namespace MsdfAtlasGen
 
         public void WrapBox(GlyphAttributes glyphAttributes)
         {
-            double scale = glyphAttributes.Scale * _geometryScale;
-            Msdfgen.Range range = glyphAttributes.Range / _geometryScale;
-            Padding fullPadding = (glyphAttributes.InnerPadding + glyphAttributes.OuterPadding) / _geometryScale;
+            // glyphAttributes.Scale is already pixels-per-font-unit for this glyph.
+            double scale = glyphAttributes.Scale;
+            Msdfgen.Range range = glyphAttributes.Range;
+            Padding fullPadding = glyphAttributes.InnerPadding + glyphAttributes.OuterPadding;
             
             _box.Range = range;
             _box.Scale = scale;
@@ -180,11 +181,12 @@ namespace MsdfAtlasGen
         {
             if (_box.Rect.W > 0 && _box.Rect.H > 0)
             {
-                double invBoxScale = 1 / _box.Scale;
-                l = _geometryScale * (-_box.Translate.X + (_box.OuterPadding.L + 0.5) * invBoxScale);
-                b = _geometryScale * (-_box.Translate.Y + (_box.OuterPadding.B + 0.5) * invBoxScale);
-                r = _geometryScale * (-_box.Translate.X + (-_box.OuterPadding.R + _box.Rect.W - 0.5) * invBoxScale);
-                t = _geometryScale * (-_box.Translate.Y + (-_box.OuterPadding.T + _box.Rect.H - 0.5) * invBoxScale);
+                // Convert back to pixel space: translate is stored in font units, Scale is pixels-per-unit.
+                double s = _box.Scale;
+                l = -_box.Translate.X * s + _box.OuterPadding.L + 0.5;
+                b = -_box.Translate.Y * s + _box.OuterPadding.B + 0.5;
+                r = -_box.Translate.X * s + (-_box.OuterPadding.R + _box.Rect.W - 0.5);
+                t = -_box.Translate.Y * s + (-_box.OuterPadding.T + _box.Rect.H - 0.5);
             }
             else
             {
