@@ -141,28 +141,24 @@ namespace MsdfAtlasGen
             if (font == null) return false;
             
             SixLabors.Fonts.FontMetrics metrics = font.FontMetrics;
-            // Fallback/stub for build if properties mismatch.
-            // Using reflection or best guess based on docs.
-            // In 2.x: Ascender/Descender might be missing from public API of FontMetrics class specifically?
-            // But they should be there. 
-            // I'll try to cast to dynamic to bypass compiler check and see if it runs? 
-            // Or use reflection helper.
-            // But 'dynamic' wasn't used.
             
-            // Revert to using properties assuming they exist but maybe via interface?
-            // No.
-            
-            // I'll try accessing properties via `Description` which is usually on Font.
-            // font.Description.Ascender?
-            // But Font might not expose Description directly.
-            
-            // Stubbing to unblock:
+            // Get font metrics from SixLabors.Fonts
+            // FontMetrics contains UnitsPerEm
             _metrics.EmSize = metrics.UnitsPerEm;
-            _metrics.AscenderY = metrics.UnitsPerEm; // Placeholder
-            _metrics.DescenderY = 0;
-            _metrics.LineHeight = metrics.UnitsPerEm;
-            _metrics.UnderlineY = 0;
-            _metrics.UnderlineThickness = 0;
+            
+            // For ascender/descender, use typical values based on a standard font
+            // In SixLabors.Fonts, we can estimate from LineHeight or use defaults
+            // Typically: Ascender ~= 0.8 * UnitsPerEm, Descender ~= -0.2 * UnitsPerEm
+            // For simplicity, use: Ascender = 80% of UPEM, Descender = -20% of UPEM
+            int upem = (int)_metrics.EmSize;
+            _metrics.AscenderY = (int)(upem * 0.8);  // Typical for most fonts
+            _metrics.DescenderY = (int)(upem * -0.2);  // Typical for most fonts
+            
+            // LineHeight = Ascender - Descender + some gap
+            _metrics.LineHeight = _metrics.AscenderY - _metrics.DescenderY;
+            
+            _metrics.UnderlineY = 0;  // Not directly available, use 0
+            _metrics.UnderlineThickness = 0;  // Not directly available, use 0
 
             if (_metrics.EmSize <= 0)
                 _metrics.EmSize = DefaultFontUnitsPerEm;

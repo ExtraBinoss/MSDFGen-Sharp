@@ -129,24 +129,18 @@ namespace MsdfAtlasGen
                 
                 // BMFont format:
                 // xoffset: offset from current cursor position to left edge of glyph (in pixels)
-                // yoffset: offset from baseline to top of glyph (positive = up from baseline)
+                // yoffset: offset from baseline to top of glyph
                 // xadvance: horizontal advance (distance to move cursor after rendering)
                 
-                // pl, pb, pr, pt are in EM units from GetQuadPlaneBounds
-                // metrics have already been scaled by geometryScale in FontGeometry.LoadMetrics
-                // so metrics.AscenderY is already in "pseudo-pixels" (EM * geometryScale = pixels at fontSize)
-                double scale = fontSize / metrics.EmSize;  // Should be fontSize / 1.0 = fontSize
+                // pl, pb, pr, pt are in scaled EM units (EM * geometryScale) from GetQuadPlaneBounds
+                // metrics values are also scaled (EM * geometryScale) from FontGeometry.LoadMetrics
+                // After scaling, EmSize becomes 1.0, so we just need fontSize to convert to final pixels
                 
-                // xoffset = left bound in pixels
-                int xoffset = (int)Math.Round(pl * scale);
-                
-                // yoffset in FNT is measured from baseline (descender baseline is the top line)
-                // metrics.AscenderY and pt are both in scaled EM units
-                // yoffset = (ascender_y - top_y)
-                int yoffset = (int)Math.Round((metrics.AscenderY - pt) * scale);
-                
-                // xadvance is advance width - GetAdvance() returns EM units, scale to pixels
-                int xadvance = (int)Math.Round(glyph.GetAdvance() * scale);
+                // Convert from scaled EM units to pixels
+                // scaled units are equivalent to pixels at fontSize size
+                int xoffset = (int)Math.Round(pl);
+                int yoffset = (int)Math.Round(metrics.AscenderY - pt);
+                int xadvance = (int)Math.Round(glyph.GetAdvance());
 
                 writer.WriteStartElement("char");
                 writer.WriteAttributeString("id", glyph.GetCodepoint().ToString());
