@@ -1,6 +1,7 @@
 using System;
 using Msdfgen;
 using MsdfAtlasGen;
+using System.Globalization;
 
 namespace MsdfAtlasGen.Cli
 {
@@ -36,7 +37,7 @@ namespace MsdfAtlasGen.Cli
                         config.AllGlyphs = true;
                         break;
                     case "-fontscale":
-                        config.FontScale = double.Parse(args[++i]);
+						config.FontScale = double.Parse(args[++i], CultureInfo.InvariantCulture);
                         break;
                     case "-fontname":
                         config.FontName = args[++i];
@@ -54,8 +55,8 @@ namespace MsdfAtlasGen.Cli
 
                     // Atlas dimensions
                     case "-dimensions":
-                        config.Width = int.Parse(args[++i]);
-                        config.Height = int.Parse(args[++i]);
+                        config.Width = int.Parse(args[++i], CultureInfo.InvariantCulture);
+                        config.Height = int.Parse(args[++i], CultureInfo.InvariantCulture);
                         break;
                     case "-pots":
                         config.DimensionsConstraint = DimensionsConstraint.PowerOfTwoSquare;
@@ -106,16 +107,16 @@ namespace MsdfAtlasGen.Cli
 
                     // Glyph configuration
                     case "-size":
-                        config.Size = double.Parse(args[++i]);
+                        config.Size = double.Parse(args[++i], CultureInfo.InvariantCulture);
                         break;
                     case "-minsize":
-                        config.MinSize = double.Parse(args[++i]);
+                        config.MinSize = double.Parse(args[++i], CultureInfo.InvariantCulture);
                         break;
                     case "-pxrange":
-                        config.PxRange = new Msdfgen.Range(double.Parse(args[++i]));
+                        config.PxRange = new Msdfgen.Range(double.Parse(args[++i], CultureInfo.InvariantCulture));
                         break;
                     case "-emrange":
-                        config.EmRange = double.Parse(args[++i]);
+                        config.EmRange = double.Parse(args[++i], CultureInfo.InvariantCulture);
                         break;
 
                     // Distance field settings
@@ -126,7 +127,7 @@ namespace MsdfAtlasGen.Cli
                         config.ColoringStrategy = args[++i].ToLower();
                         break;
                     case "-miterlimit":
-                        config.MiterLimit = double.Parse(args[++i]);
+                        config.MiterLimit = double.Parse(args[++i], CultureInfo.InvariantCulture);
                         break;
                     case "-overlap":
                         config.Overlap = true;
@@ -141,10 +142,10 @@ namespace MsdfAtlasGen.Cli
                         config.Scanline = true;
                         break;
                     case "-seed":
-                        config.Seed = ulong.Parse(args[++i]);
+                        config.Seed = ulong.Parse(args[++i], CultureInfo.InvariantCulture);
                         break;
                     case "-threads":
-                        config.Threads = int.Parse(args[++i]);
+                        config.Threads = int.Parse(args[++i], CultureInfo.InvariantCulture);
                         break;
                     case "-yorigin":
                         config.YOrigin = args[++i].ToLower() == "top" ? YAxisOrientation.Downward : YAxisOrientation.Upward;
@@ -155,63 +156,63 @@ namespace MsdfAtlasGen.Cli
 
                     // Packing
                     case "-spacing":
-                        config.Spacing = int.Parse(args[++i]);
+                        config.Spacing = int.Parse(args[++i], CultureInfo.InvariantCulture);
                         break;
                     case "-scale":
-                        config.Scale = double.Parse(args[++i]);
+                        config.Scale = double.Parse(args[++i], CultureInfo.InvariantCulture);
                         break;
 
                     // Padding arguments
                     case "-pxpadding":
                     case "-innerpxpadding":
-                        double pxPad = double.Parse(args[++i]);
+                        double pxPad = double.Parse(args[++i], CultureInfo.InvariantCulture);
                         config.InnerPxPadding = new Padding(pxPad);
                         break;
                     case "-apxpadding":
                     case "-ainnerpxpadding":
                         config.InnerPxPadding = new Padding(
-                            double.Parse(args[++i]),  // left
-                            double.Parse(args[++i]),  // bottom
-                            double.Parse(args[++i]),  // right
-                            double.Parse(args[++i])   // top
+                            double.Parse(args[++i], CultureInfo.InvariantCulture),  // left
+                            double.Parse(args[++i], CultureInfo.InvariantCulture),  // bottom
+                            double.Parse(args[++i], CultureInfo.InvariantCulture),  // right
+                            double.Parse(args[++i], CultureInfo.InvariantCulture)   // top
                         );
                         break;
                     case "-outerpxpadding":
-                        double outerPxPad = double.Parse(args[++i]);
+                        double outerPxPad = double.Parse(args[++i], CultureInfo.InvariantCulture);
                         config.OuterPxPadding = new Padding(outerPxPad);
                         break;
                     case "-aouterpxpadding":
                         config.OuterPxPadding = new Padding(
-                            double.Parse(args[++i]),  // left
-                            double.Parse(args[++i]),  // bottom
-                            double.Parse(args[++i]),  // right
-                            double.Parse(args[++i])   // top
+                            double.Parse(args[++i], CultureInfo.InvariantCulture),  // left
+                            double.Parse(args[++i], CultureInfo.InvariantCulture),  // bottom
+                            double.Parse(args[++i], CultureInfo.InvariantCulture),  // right
+                            double.Parse(args[++i], CultureInfo.InvariantCulture)   // top
                         );
                         break;
                     case "-empadding":
                     case "-innerempadding":
-                        double emPad = double.Parse(args[++i]);
+                        double emPad = double.Parse(args[++i], CultureInfo.InvariantCulture);
                         config.InnerEmPadding = new Padding(emPad);
                         break;
                     case "-aempadding":
                     case "-ainnerempadding":
                         config.InnerEmPadding = new Padding(
-                            double.Parse(args[++i]),
-                            double.Parse(args[++i]),
-                            double.Parse(args[++i]),
-                            double.Parse(args[++i])
+                            double.Parse(args[++i], CultureInfo.InvariantCulture),
+                            double.Parse(args[++i], CultureInfo.InvariantCulture),
+                            double.Parse(args[++i], CultureInfo.InvariantCulture),
+                            double.Parse(args[++i], CultureInfo.InvariantCulture)
                         );
                         break;
                     case "-outerempadding":
-                        double outerEmPad = double.Parse(args[++i]);
+                        double outerEmPad = double.Parse(args[++i], CultureInfo.InvariantCulture);
                         config.OuterEmPadding = new Padding(outerEmPad);
                         break;
                     case "-aouterempadding":
                         config.OuterEmPadding = new Padding(
-                            double.Parse(args[++i]),
-                            double.Parse(args[++i]),
-                            double.Parse(args[++i]),
-                            double.Parse(args[++i])
+                            double.Parse(args[++i], CultureInfo.InvariantCulture),
+                            double.Parse(args[++i], CultureInfo.InvariantCulture),
+                            double.Parse(args[++i], CultureInfo.InvariantCulture),
+                            double.Parse(args[++i], CultureInfo.InvariantCulture)
                         );
                         break;
 
@@ -232,8 +233,8 @@ namespace MsdfAtlasGen.Cli
                         }
                         break;
                     case "-testrendersize":
-                        config.TestRenderWidth = int.Parse(args[++i]);
-                        config.TestRenderHeight = int.Parse(args[++i]);
+                        config.TestRenderWidth = int.Parse(args[++i], CultureInfo.InvariantCulture);
+                        config.TestRenderHeight = int.Parse(args[++i], CultureInfo.InvariantCulture);
                         break;
                     // Debug single glyph dump
                     case "-debugglyph":
