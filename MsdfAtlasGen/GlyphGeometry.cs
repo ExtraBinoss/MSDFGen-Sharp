@@ -23,8 +23,12 @@ namespace MsdfAtlasGen
         private int _codepoint;
         private double _geometryScale;
         private Shape _shape;
-        private Shape.Bounds _bounds;
-        private double _advance;
+        private Shape.Bounds _bounds; // scaled bounds in pixels at target font size
+        private double _advance;      // scaled advance in pixels at target font size
+        
+        // Store original metrics before geometry scaling for FNT export
+        private double _advanceUnscaled;   // advance in pixels at target font size (no extra scaling later)
+        private Shape.Bounds _boundsUnscaled; // bounds in font-space (fontSize = 1.0) for reference
         
         private struct Box
         {
@@ -57,12 +61,15 @@ namespace MsdfAtlasGen
                 _codepoint = character;
                 _geometryScale = geometryScale;
 
-                // Get advance
-                // Use TextMeasurer to get advance width
-                var rect = TextMeasurer.MeasureAdvance(character.ToString(), new TextOptions(font));
-                _advance = rect.Width;
-                
-                _advance *= geometryScale;
+                // Derive target pixel font size from geometryScale (fontSize / unitsPerEm)
+                double unitsPerEm = font.FontMetrics.UnitsPerEm;
+                double fontSizePixels = geometryScale * unitsPerEm;
+
+                // Measure advance using a unit-sized font and scale to target size
+                var unitFont = new Font(font.Family, 1);
+                var advanceRect = TextMeasurer.MeasureAdvance(character.ToString(), new TextOptions(unitFont));
+                _advanceUnscaled = advanceRect.Width * fontSizePixels;
+                _advance = _advanceUnscaled;
 
                 if (preprocessGeometry)
                 {
@@ -70,7 +77,10 @@ namespace MsdfAtlasGen
                     // But it has Normalize()
                 }
                 _shape.Normalize();
+
+                // Bounds from the rendered shape (already in target pixel scale for the input font)
                 _bounds = _shape.GetBounds();
+                _boundsUnscaled = _bounds;
 
                 // Validation/Winding check ignored for now or assumed correct by FontLoader
                 
@@ -216,5 +226,10 @@ namespace MsdfAtlasGen
              box.Rect = _box.Rect;
              return box;
         }
+
+        // Accessors for original unscaled metrics (for FNT export)
+        public double GetAdvanceUnscaled() => _advanceUnscaled; // already in pixels at target size
+        public Shape.Bounds GetBoundsUnscaled() => _boundsUnscaled; // font-space (FontSize=1)
+        public Shape.Bounds GetBoundsScaled() => _bounds; // pixel-space at target size
     }
 }

@@ -126,38 +126,38 @@ namespace MsdfAtlasGen
                 glyph.GetQuadAtlasBounds(out double al, out double ab, out double ar, out double at);
                 glyph.GetQuadPlaneBounds(out double pl, out double pb, out double pr, out double pt);
                 
+                int width = (int)Math.Round(ar - al);
+                int height = (int)Math.Round(at - ab);
+                
+                // Atlas coordinates - handle Y-axis orientation
+                // GetQuadAtlasBounds returns coordinates in atlas space
+                // al, ab = left, bottom  |  ar, at = right, top
                 int x = (int)Math.Round(al);
-                int y, height;
+                int y;
                 
                 if (yDirection == YAxisOrientation.Downward)
                 {
+                    // BMFont uses top-left origin, but atlas may use bottom-left
+                    // Flip Y: y_bmfont = atlasHeight - y_bottom_up - height
                     y = (int)Math.Round(atlasHeight - at);
-                    height = (int)Math.Round(at - ab);
                 }
                 else
                 {
+                    // Top-left origin already
                     y = (int)Math.Round(ab);
-                    height = (int)Math.Round(at - ab);
                 }
-                
-                int width = (int)Math.Round(ar - al);
                 
                 // BMFont format:
                 // xoffset: offset from current cursor position to left edge of glyph (in pixels)
                 // yoffset: offset from baseline to top of glyph
                 // xadvance: horizontal advance (distance to move cursor after rendering)
-                
-                // pl, pb, pr, pt are in scaled EM units from GetQuadPlaneBounds
-                // metrics values are also scaled from FontGeometry.LoadMetrics
-                // After scaling, EmSize becomes 1.0
-                
-                // xoffset and yoffset are already in the right scale
+
+                // pl/pb/pr/pt are plane-space bounds after geometry scaling (pixels at target size)
                 int xoffset = (int)Math.Round(pl);
                 int yoffset = (int)Math.Round(metrics.AscenderY - pt);
-                
-                // xadvance: GetAdvance() returns scaled EM units (1 unit = 1 pixel at fontSize)
-                // Since metrics.EmSize is 1.0 after scaling, we just round it
-                int xadvance = (int)Math.Round(glyph.GetAdvance());
+
+                // Advance already in pixels at target size
+                int xadvance = (int)Math.Round(glyph.GetAdvanceUnscaled());
 
                 writer.WriteStartElement("char");
                 writer.WriteAttributeString("id", glyph.GetCodepoint().ToString());

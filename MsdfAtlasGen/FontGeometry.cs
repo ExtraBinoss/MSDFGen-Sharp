@@ -227,5 +227,8 @@ namespace MsdfAtlasGen
         }
         
         public string GetName() => _name;
+        
+        // Get original UnitsPerEm before scaling (for FNT export calculations)
+        public double GetUnitsPerEm() => (_metrics.EmSize > 0) ? _metrics.EmSize / _geometryScale : DefaultFontUnitsPerEm;
     }
 }
