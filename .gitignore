@@ -9,3 +9,5 @@
 Msdfgen.Cli/RawMsdf/**
 Msdfgen.Cli/Render/**
 Msdfgen.Cli/ExceptedOutput/**
+Msdfgen.Cli/bin/**
+Msdfgen.Cli/obj/**
