@@ -21,7 +21,7 @@ The repository is organized into several components to separate core logic, exte
 
 > [!NOTE]
 > **MSDFGen-Sharp is a port of the original msdfgen and msdf-atlas-gen projects. It is not a direct port of the original CLI tools.**
-> **If you want to use the original CLI tools, you can find them [here MSDFGen](https://github.com/Chlumsky/msdfgen) and [here MSDFAtlasGen](https://github.com/Chlumsky/msdf-atlas-gen).**
+> **If you want to use the original CLI tools, you can find them here [MSDFGen](https://github.com/Chlumsky/msdfgen) and here [MSDFAtlasGen](https://github.com/Chlumsky/msdf-atlas-gen).**
 
 ## 📦 Installation
 
