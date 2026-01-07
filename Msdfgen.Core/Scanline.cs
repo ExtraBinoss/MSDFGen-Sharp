@@ -5,6 +5,9 @@ namespace Msdfgen
 {
     public class Scanline
     {
+        /// <summary>
+        /// Represents an intersection of the scanline with a shape edge.
+        /// </summary>
         public struct Intersection
         {
             public double X;
@@ -14,6 +17,9 @@ namespace Msdfgen
         private readonly List<Intersection> intersections = new List<Intersection>();
         private int lastIndex = 0;
 
+        /// <summary>
+        /// Computes the total overlapping length of filled regions between two scanlines.
+        /// </summary>
         public static double Overlap(Scanline a, Scanline b, double xFrom, double xTo, FillRule fillRule)
         {
             double total = 0;
@@ -60,6 +66,9 @@ namespace Msdfgen
             return total;
         }
 
+        /// <summary>
+        /// Sets the intersections for the scanline and preprocesses them.
+        /// </summary>
         public void SetIntersections(List<Intersection> intersections)
         {
             this.intersections.Clear();
@@ -67,11 +76,17 @@ namespace Msdfgen
             Preprocess();
         }
 
+        /// <summary>
+        /// Returns the number of intersections to the left of x.
+        /// </summary>
         public int CountIntersections(double x)
         {
             return MoveTo(x) + 1;
         }
 
+        /// <summary>
+        /// Returns the sum of intersection directions to the left of x.
+        /// </summary>
         public int SumIntersections(double x)
         {
             int index = MoveTo(x);
@@ -80,6 +95,9 @@ namespace Msdfgen
             return 0;
         }
 
+        /// <summary>
+        /// Returns whether the scanline is filled at the specified x-coordinate.
+        /// </summary>
         public bool Filled(double x, FillRule fillRule)
         {
             return fillRule.Interpret(SumIntersections(x));

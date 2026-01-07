@@ -10,12 +10,18 @@ namespace Msdfgen
         public double X;
         public double Y;
 
+        /// <summary>
+        /// Initializes a vector with the same value for both components.
+        /// </summary>
         public Vector2(double val = 0)
         {
             X = val;
             Y = val;
         }
 
+        /// <summary>
+        /// Initializes a vector with the specified X and Y components.
+        /// </summary>
         public Vector2(double x, double y)
         {
             X = x;
@@ -64,14 +70,7 @@ namespace Msdfgen
             double len = Length();
             if (len != 0)
                 return new Vector2(X / len, Y / len);
-            return new Vector2(0, allowZero ? 1 : 0); // Logic from C++: !allowZero -> 0 if false, 1 if true? Wait. C++ !allowZero is boolean NOT.
-            // C++: return Vector2(0, !allowZero); 
-            // If allowZero is false, !allowZero is true (1). So (0, 1).
-            // If allowZero is true, !allowZero is false (0). So (0, 0).
-            // Wait, why (0, 1) if not allow zero?
-            // Ah, to avoid zero vector if not allowed?
-            // Let's re-read C++: return Vector2(0, !allowZero);
-            // If allowZero is false, y becomes 1. If allowZero is true, y becomes 0.
+            return new Vector2(0, allowZero ? 1 : 0);
         }
 
         /// <summary>
@@ -95,86 +94,137 @@ namespace Msdfgen
                 : new Vector2(0, -(!allowZero ? 1 : 0));
         }
 
+        /// <summary>
+        /// Returns the dot product of two vectors.
+        /// </summary>
         public static double DotProduct(Vector2 a, Vector2 b)
         {
             return a.X * b.X + a.Y * b.Y;
         }
 
+        /// <summary>
+        /// Returns the cross product of two vectors.
+        /// </summary>
         public static double CrossProduct(Vector2 a, Vector2 b)
         {
             return a.X * b.Y - a.Y * b.X;
         }
 
+        /// <summary>
+        /// Equality operator.
+        /// </summary>
         public static bool operator ==(Vector2 a, Vector2 b)
         {
             return a.X == b.X && a.Y == b.Y;
         }
 
+        /// <summary>
+        /// Inequality operator.
+        /// </summary>
         public static bool operator !=(Vector2 a, Vector2 b)
         {
             return a.X != b.X || a.Y != b.Y;
         }
 
+        /// <summary>
+        /// Unary plus operator.
+        /// </summary>
         public static Vector2 operator +(Vector2 v)
         {
             return v;
         }
 
+        /// <summary>
+        /// Unary minus operator.
+        /// </summary>
         public static Vector2 operator -(Vector2 v)
         {
             return new Vector2(-v.X, -v.Y);
         }
 
+        /// <summary>
+        /// Implicit boolean conversion (true if non-zero).
+        /// </summary>
         public static bool operator true(Vector2 v)
         {
             return v.X != 0 || v.Y != 0;
         }
 
+        /// <summary>
+        /// Logical negation operator.
+        /// </summary>
         public static bool operator !(Vector2 v)
         {
              return v.X == 0 && v.Y == 0;
         }
 
+        /// <summary>
+        /// Implicit boolean conversion (false if zero).
+        /// </summary>
         public static bool operator false(Vector2 v)
         {
              return v.X == 0 && v.Y == 0;
         }
 
+        /// <summary>
+        /// Vector addition.
+        /// </summary>
         public static Vector2 operator +(Vector2 a, Vector2 b)
         {
             return new Vector2(a.X + b.X, a.Y + b.Y);
         }
 
+        /// <summary>
+        /// Vector subtraction.
+        /// </summary>
         public static Vector2 operator -(Vector2 a, Vector2 b)
         {
             return new Vector2(a.X - b.X, a.Y - b.Y);
         }
 
+        /// <summary>
+        /// Component-wise multiplication.
+        /// </summary>
         public static Vector2 operator *(Vector2 a, Vector2 b)
         {
             return new Vector2(a.X * b.X, a.Y * b.Y);
         }
 
+        /// <summary>
+        /// Component-wise division.
+        /// </summary>
         public static Vector2 operator /(Vector2 a, Vector2 b)
         {
             return new Vector2(a.X / b.X, a.Y / b.Y);
         }
 
+        /// <summary>
+        /// Scalar multiplication.
+        /// </summary>
         public static Vector2 operator *(double a, Vector2 b)
         {
             return new Vector2(a * b.X, a * b.Y);
         }
 
+        /// <summary>
+        /// Scalar division (scalar / vector).
+        /// </summary>
         public static Vector2 operator /(double a, Vector2 b)
         {
             return new Vector2(a / b.X, a / b.Y);
         }
 
+        /// <summary>
+        /// Scalar multiplication.
+        /// </summary>
         public static Vector2 operator *(Vector2 a, double b)
         {
             return new Vector2(a.X * b, a.Y * b);
         }
 
+        /// <summary>
+        /// Scalar division (vector / scalar).
+        /// </summary>
         public static Vector2 operator /(Vector2 a, double b)
         {
             return new Vector2(a.X / b, a.Y / b);

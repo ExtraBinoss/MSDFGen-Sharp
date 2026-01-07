@@ -9,21 +9,33 @@ namespace Msdfgen
     {
         public EdgeColor Color;
 
+        /// <summary>
+        /// Initializes the edge segment with a color.
+        /// </summary>
         protected EdgeSegment(EdgeColor edgeColor = EdgeColor.WHITE)
         {
             Color = edgeColor;
         }
 
+        /// <summary>
+        /// Creates a new linear edge segment.
+        /// </summary>
         public static EdgeSegment Create(Vector2 p0, Vector2 p1, EdgeColor edgeColor = EdgeColor.WHITE)
         {
             return new LinearSegment(p0, p1, edgeColor);
         }
 
+        /// <summary>
+        /// Creates a new quadratic Bezier edge segment.
+        /// </summary>
         public static EdgeSegment Create(Vector2 p0, Vector2 p1, Vector2 p2, EdgeColor edgeColor = EdgeColor.WHITE)
         {
             return new QuadraticSegment(p0, p1, p2, edgeColor);
         }
 
+        /// <summary>
+        /// Creates a new cubic Bezier edge segment.
+        /// </summary>
         public static EdgeSegment Create(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, EdgeColor edgeColor = EdgeColor.WHITE)
         {
             return new CubicSegment(p0, p1, p2, p3, edgeColor);

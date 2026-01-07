@@ -2,32 +2,61 @@ using System;
 
 namespace Msdfgen
 {
+    /// <summary>
+    /// Component that evaluates the distance of a point from a set of edges.
+    /// </summary>
     public interface IEdgeSelector
     {
+        /// <summary>
+        /// Creates a persistent cache object for each edge in the shape.
+        /// </summary>
         object CreateEdgeCache();
+
+        /// <summary>
+        /// Resets the selector's state for a new point.
+        /// </summary>
         void Reset(Vector2 p);
+
+        /// <summary>
+        /// Updates the selector with a new edge segment and its neighbors.
+        /// </summary>
         void AddEdge(object cache, EdgeSegment prevEdge, EdgeSegment edge, EdgeSegment nextEdge);
     }
 
+    /// <summary>
+    /// Evaluates the true signed distance of a point from a shape.
+    /// </summary>
     public class TrueDistanceSelector : IEdgeSelector
     {
+        /// <summary>
+        /// Persistent cache for each edge used by this selector.
+        /// </summary>
         public class EdgeCache
         {
             public Vector2 Point;
             public double AbsDistance;
         }
 
+        /// <summary>
+        /// Creates a persistent cache object for each edge in the shape.
+        /// </summary>
         public object CreateEdgeCache() => new EdgeCache();
 
         private const double DISTANCE_DELTA_FACTOR = 1.001;
         private Vector2 p;
         private SignedDistance minDistance;
 
+        /// <summary>
+        /// Initializes the selector.
+        /// </summary>
         public TrueDistanceSelector()
         {
             minDistance = SignedDistance.Infinite;
         }
 
+        /// <summary>
+        /// Resets the selector's state for a new point.
+        /// </summary>
         public void Reset(Vector2 p)
         {
             double delta = DISTANCE_DELTA_FACTOR * (p - this.p).Length();
@@ -35,6 +64,9 @@ namespace Msdfgen
             this.p = p;
         }
 
+        /// <summary>
+        /// Updates the selector with a new edge segment and its neighbors.
+        /// </summary>
         public void AddEdge(object cacheObj, EdgeSegment prevEdge, EdgeSegment edge, EdgeSegment nextEdge)
         {
             var cache = (EdgeCache)cacheObj;
@@ -50,20 +82,32 @@ namespace Msdfgen
             }
         }
 
+        /// <summary>
+        /// Merges another selector's results into this one.
+        /// </summary>
         public void Merge(TrueDistanceSelector other)
         {
             if (other.minDistance < minDistance)
                 minDistance = other.minDistance;
         }
 
+        /// <summary>
+        /// Returns the computed distance.
+        /// </summary>
         public double Distance()
         {
             return minDistance.Distance;
         }
     }
 
+    /// <summary>
+    /// Base class for selectors that evaluate perpendicular distance.
+    /// </summary>
     public class PerpendicularDistanceSelectorBase
     {
+        /// <summary>
+        /// Persistent cache for each edge used by this selector.
+        /// </summary>
         public class EdgeCache
         {
              public Vector2 Point;
@@ -76,9 +120,11 @@ namespace Msdfgen
 
         protected const double DISTANCE_DELTA_FACTOR = 1.001;
 
+        /// <summary>
+        /// Computes the perpendicular distance from a point to a line.
+        /// </summary>
         public static bool GetPerpendicularDistance(ref double distance, Vector2 ep, Vector2 edgeDir)
         {
-            // ... (unchanged logic)
             double ts = Vector2.DotProduct(ep, edgeDir);
             if (ts > 0)
             {
@@ -98,6 +144,9 @@ namespace Msdfgen
         protected EdgeSegment? nearEdge;
         protected double nearEdgeParam;
 
+        /// <summary>
+        /// Initializes the selector base.
+        /// </summary>
         public PerpendicularDistanceSelectorBase()
         {
             minTrueDistance = SignedDistance.Infinite;
@@ -106,6 +155,9 @@ namespace Msdfgen
             nearEdge = null;
         }
 
+        /// <summary>
+        /// Resets the base state with a delta.
+        /// </summary>
         public void Reset(double delta)
         {
             minTrueDistance.Distance += Arithmetics.NonZeroSign(minTrueDistance.Distance) * delta;
@@ -115,6 +167,9 @@ namespace Msdfgen
             nearEdgeParam = 0;
         }
 
+        /// <summary>
+        /// Returns whether the edge is potentially relevant for the distance evaluation.
+        /// </summary>
         public bool IsEdgeRelevant(EdgeCache cache, EdgeSegment edge, Vector2 p)
         {
             double delta = DISTANCE_DELTA_FACTOR * (p - cache.Point).Length();
@@ -133,6 +188,9 @@ namespace Msdfgen
             );
         }
 
+        /// <summary>
+        /// Updates the minimum true distance.
+        /// </summary>
         public void AddEdgeTrueDistance(EdgeSegment edge, SignedDistance distance, double param)
         {
             if (distance < minTrueDistance)
@@ -143,6 +201,9 @@ namespace Msdfgen
             }
         }
 
+        /// <summary>
+        /// Updates the minimum negative and positive perpendicular distances.
+        /// </summary>
         public void AddEdgePerpendicularDistance(double distance)
         {
             if (distance <= 0 && distance > minNegativePerpendicularDistance)
@@ -151,6 +212,9 @@ namespace Msdfgen
                 minPositivePerpendicularDistance = distance;
         }
 
+        /// <summary>
+        /// Merges another selector base results into this one.
+        /// </summary>
         public void Merge(PerpendicularDistanceSelectorBase other)
         {
             if (other.minTrueDistance < minTrueDistance)
@@ -165,6 +229,9 @@ namespace Msdfgen
                 minPositivePerpendicularDistance = other.minPositivePerpendicularDistance;
         }
 
+        /// <summary>
+        /// Computes the final perpendicular distance.
+        /// </summary>
         public double ComputeDistance(Vector2 p)
         {
             double minDistance = minTrueDistance.Distance < 0 ? minNegativePerpendicularDistance : minPositivePerpendicularDistance;
@@ -178,18 +245,30 @@ namespace Msdfgen
             return minDistance;
         }
 
+        /// <summary>
+        /// Returns the computed true distance.
+        /// </summary>
         public SignedDistance TrueDistance()
         {
             return minTrueDistance;
         }
     }
     
+    /// <summary>
+    /// Evaluates the perpendicular signed distance of a point from a shape.
+    /// </summary>
     public class PerpendicularDistanceSelector : PerpendicularDistanceSelectorBase, IEdgeSelector
     {
         private Vector2 p;
         
+        /// <summary>
+        /// Creates a persistent cache object for each edge in the shape.
+        /// </summary>
         public object CreateEdgeCache() => new EdgeCache();
 
+        /// <summary>
+        /// Resets the selector's state for a new point.
+        /// </summary>
         public void Reset(Vector2 p)
         {
             double delta = DISTANCE_DELTA_FACTOR * (p - this.p).Length();
@@ -197,6 +276,9 @@ namespace Msdfgen
             this.p = p;
         }
 
+        /// <summary>
+        /// Updates the selector with a new edge segment and its neighbors.
+        /// </summary>
         public void AddEdge(object cacheObj, EdgeSegment prevEdge, EdgeSegment edge, EdgeSegment nextEdge)
         {
             var cache = (EdgeCache)cacheObj;
@@ -235,16 +317,25 @@ namespace Msdfgen
             }
         }
         
+        /// <summary>
+        /// Returns the computed distance.
+        /// </summary>
         public double Distance()
         {
             return ComputeDistance(p);
         }
     }
 
+    /// <summary>
+    /// Evaluates the distance from a shape with colored edges.
+    /// </summary>
     public class MultiDistanceSelector : IEdgeSelector
     {
         public bool hasTrueDistance() => false;
         
+        /// <summary>
+        /// Creates a persistent cache object for each edge in the shape.
+        /// </summary>
         public object CreateEdgeCache() => new PerpendicularDistanceSelectorBase.EdgeCache();
 
         private Vector2 p;
@@ -253,6 +344,9 @@ namespace Msdfgen
         private PerpendicularDistanceSelectorBase b = new PerpendicularDistanceSelectorBase();
         private const double DISTANCE_DELTA_FACTOR = 1.001;
 
+        /// <summary>
+        /// Resets the selector's state for a new point.
+        /// </summary>
         public void Reset(Vector2 p)
         {
             double delta = DISTANCE_DELTA_FACTOR * (p - this.p).Length();
@@ -262,6 +356,9 @@ namespace Msdfgen
             this.p = p;
         }
 
+        /// <summary>
+        /// Updates the selector with a new edge segment and its neighbors.
+        /// </summary>
         public void AddEdge(object cacheObj, EdgeSegment prevEdge, EdgeSegment edge, EdgeSegment nextEdge)
         {
             var cache = (PerpendicularDistanceSelectorBase.EdgeCache)cacheObj;
@@ -318,6 +415,9 @@ namespace Msdfgen
             }
         }
 
+        /// <summary>
+        /// Merges another selector's results into this one.
+        /// </summary>
         public void Merge(MultiDistanceSelector other)
         {
             r.Merge(other.r);
@@ -325,6 +425,9 @@ namespace Msdfgen
             b.Merge(other.b);
         }
 
+        /// <summary>
+        /// Returns the computed multi-channel distance.
+        /// </summary>
         public MultiDistance Distance()
         {
             return new MultiDistance
@@ -335,6 +438,9 @@ namespace Msdfgen
             };
         }
 
+        /// <summary>
+        /// Returns the computed true signed distance.
+        /// </summary>
         public SignedDistance TrueDistance()
         {
             SignedDistance distance = r.TrueDistance();
@@ -346,8 +452,14 @@ namespace Msdfgen
         }
     }
 
+    /// <summary>
+    /// Evaluates the distance from a shape with colored edges and true distance.
+    /// </summary>
     public class MultiAndTrueDistanceSelector : MultiDistanceSelector
     {
+        /// <summary>
+        /// Returns the computed multi-channel and true distance.
+        /// </summary>
         public new MultiAndTrueDistance Distance()
         {
             MultiDistance multiDistance = base.Distance();

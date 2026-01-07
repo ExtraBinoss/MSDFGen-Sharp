@@ -2,8 +2,19 @@ using System;
 
 namespace Msdfgen
 {
+    /// <summary>
+    /// Provides utility methods for solving quadratic and cubic equations.
+    /// </summary>
     public static class EquationSolver
     {
+        /// <summary>
+        /// Solves a quadratic equation of the form ax^2 + bx + c = 0.
+        /// </summary>
+        /// <param name="x">An array to store the real roots found.</param>
+        /// <param name="a">The coefficient of x^2.</param>
+        /// <param name="b">The coefficient of x.</param>
+        /// <param name="c">The constant term.</param>
+        /// <returns>The number of real roots found, or -1 if the equation is degenerate (e.g., 0 = 0).</returns>
         public static int SolveQuadratic(double[] x, double a, double b, double c)
         {
             if (a == 0 || Math.Abs(b) > 1e12 * Math.Abs(a))
@@ -34,6 +45,9 @@ namespace Msdfgen
             }
         }
 
+        /// <summary>
+        /// Solves a cubic equation of the form x^3 + ax^2 + bx + c = 0 (normed).
+        /// </summary>
         private static int SolveCubicNormed(double[] x, double a, double b, double c)
         {
             double a2 = a * a;
@@ -68,6 +82,15 @@ namespace Msdfgen
             }
         }
 
+        /// <summary>
+        /// Solves a cubic equation of the form ax^3 + bx^2 + cx + d = 0.
+        /// </summary>
+        /// <param name="x">An array to store the real roots found.</param>
+        /// <param name="a">The coefficient of x^3.</param>
+        /// <param name="b">The coefficient of x^2.</param>
+        /// <param name="c">The coefficient of x.</param>
+        /// <param name="d">The constant term.</param>
+        /// <returns>The number of real roots found.</returns>
         public static int SolveCubic(double[] x, double a, double b, double c, double d)
         {
             if (a != 0)

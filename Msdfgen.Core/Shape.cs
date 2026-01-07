@@ -6,6 +6,9 @@ namespace Msdfgen
 {
     public class Shape
     {
+        /// <summary>
+        /// Represents the bounding box of a shape.
+        /// </summary>
         public struct Bounds
         {
             public double L, B, R, T;
@@ -17,13 +20,22 @@ namespace Msdfgen
         public const double CORNER_DOT_EPSILON = 0.000001;
         private const double DECONVERGE_OVERSHOOT = 1.11111111111111111;
 
+        /// <summary>
+        /// Initializes an empty shape.
+        /// </summary>
         public Shape() { }
 
+        /// <summary>
+        /// Adds a contour to the shape.
+        /// </summary>
         public void AddContour(Contour contour)
         {
             Contours.Add(contour);
         }
 
+        /// <summary>
+        /// Validates that all contours are closed and have no null edges.
+        /// </summary>
         public bool Validate()
         {
             foreach (var contour in Contours)
@@ -42,6 +54,9 @@ namespace Msdfgen
             return true;
         }
 
+        /// <summary>
+        /// Normalizes the shape by splitting single-edge contours and deconverging sharp corners.
+        /// </summary>
         public void Normalize()
         {
             foreach (var contour in Contours)
@@ -58,10 +73,6 @@ namespace Msdfgen
                 {
                     int prevEdgeIndex = contour.Edges.Count - 1;
                     
-                    // We need to iterate and potentially modify.
-                    // However, deconvergeEdge modifies the EdgeSegment in place (or replaces it).
-                    // In C++, EdgeHolder wraps a pointer. Here we have a check.
-                    
                     for (int i = 0; i < contour.Edges.Count; ++i) 
                     {
                         var prevEdge = contour.Edges[prevEdgeIndex];
@@ -77,7 +88,6 @@ namespace Msdfgen
                             if (ConvergentCurveOrdering.Find(prevEdge, edge) < 0)
                                 axis = -axis;
                                 
-                            // Deconverge logic needs to update the edge in the list if it changes type (Quad -> Cubic)
                             DeconvergeEdge(contour.Edges, prevEdgeIndex, 1, axis.GetOrthogonal(true));
                             DeconvergeEdge(contour.Edges, i, 0, axis.GetOrthogonal(false));
                         }
@@ -87,6 +97,9 @@ namespace Msdfgen
             }
         }
 
+        /// <summary>
+        /// Slightly modifies an edge to avoid degenerate corner conditions.
+        /// </summary>
         private void DeconvergeEdge(List<EdgeSegment> edges, int index, int param, Vector2 vector)
         {
             EdgeSegment edge = edges[index];
@@ -98,8 +111,6 @@ namespace Msdfgen
             
             if (edge is CubicSegment cubic)
             {
-                // Accessing internal control points. Since they are arrays in the class, we can modify them if exposed or use modification methods.
-                // Arrays in C# are ref types, so ControlsPoints returns the array.
                 Vector2[] p = cubic.ControlPoints;
                 switch (param)
                 {
@@ -113,18 +124,27 @@ namespace Msdfgen
             }
         }
 
+        /// <summary>
+        /// Adjusts the bounding box to fit the shape.
+        /// </summary>
         public void Bound(ref double xMin, ref double yMin, ref double xMax, ref double yMax)
         {
             foreach (var contour in Contours)
                 contour.Bound(ref xMin, ref yMin, ref xMax, ref yMax);
         }
 
+        /// <summary>
+        /// Adjusts the bounding box to fit the shape with miters.
+        /// </summary>
         public void BoundMiters(ref double xMin, ref double yMin, ref double xMax, ref double yMax, double border, double miterLimit, int polarity)
         {
             foreach (var contour in Contours)
                 contour.BoundMiters(ref xMin, ref yMin, ref xMax, ref yMax, border, miterLimit, polarity);
         }
 
+        /// <summary>
+        /// Computes and returns the bounding box of the shape.
+        /// </summary>
         public Bounds GetBounds(double border = 0, double miterLimit = 0, int polarity = 0)
         {
             double largeValue = 1e240;
@@ -140,6 +160,9 @@ namespace Msdfgen
             return bounds;
         }
 
+        /// <summary>
+        /// Generates a scanline for the shape at the specified y-coordinate.
+        /// </summary>
         public void Scanline(Scanline line, double y)
         {
             var intersections = new List<Scanline.Intersection>();
@@ -160,6 +183,9 @@ namespace Msdfgen
             line.SetIntersections(intersections);
         }
 
+        /// <summary>
+        /// Returns the total number of edges in all contours.
+        /// </summary>
         public int EdgeCount()
         {
             return Contours.Sum(c => c.Edges.Count);
@@ -177,6 +203,9 @@ namespace Msdfgen
             }
         }
 
+        /// <summary>
+        /// Ensures all contours have consistent orientation.
+        /// </summary>
         public void OrientContours()
         {
             double ratio = 0.5 * (Math.Sqrt(5) - 1);
@@ -250,11 +279,17 @@ namespace Msdfgen
                     Contours[i].Reverse();
         }
 
+        /// <summary>
+        /// Returns the Y-axis orientation of the shape.
+        /// </summary>
         public YAxisOrientation GetYAxisOrientation()
         {
-            return InverseYAxis ? YAxisOrientation.Downward : YAxisOrientation.Upward; // Assuming Default is Upward
+            return InverseYAxis ? YAxisOrientation.Downward : YAxisOrientation.Upward;
         }
 
+        /// <summary>
+        /// Sets the Y-axis orientation of the shape.
+        /// </summary>
         public void SetYAxisOrientation(YAxisOrientation yAxisOrientation)
         {
             InverseYAxis = yAxisOrientation != YAxisOrientation.Upward;

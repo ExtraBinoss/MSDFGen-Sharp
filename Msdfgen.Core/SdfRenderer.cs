@@ -87,6 +87,12 @@ namespace Msdfgen
         /// <summary>
         /// Bilinear interpolation for 3-channel MSDF.
         /// </summary>
+        /// <param name="sdf">The source bitmap (MSDF).</param>
+        /// <param name="x">The x-coordinate for interpolation.</param>
+        /// <param name="y">The y-coordinate for interpolation.</param>
+        /// <param name="r">The interpolated red channel value.</param>
+        /// <param name="g">The interpolated green channel value.</param>
+        /// <param name="b">The interpolated blue channel value.</param>
         private static void Interpolate(Bitmap<float> sdf, double x, double y, out float r, out float g, out float b)
         {
             int x0 = (int)Math.Floor(x - 0.5);

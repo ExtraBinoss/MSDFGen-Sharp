@@ -7,11 +7,17 @@ namespace Msdfgen
     {
         public List<EdgeSegment> Edges { get; } = new List<EdgeSegment>();
 
+        /// <summary>
+        /// Adds an edge to the contour.
+        /// </summary>
         public void AddEdge(EdgeSegment edge)
         {
             Edges.Add(edge);
         }
 
+        /// <summary>
+        /// Adjusts the bounding box to fit the contour.
+        /// </summary>
         public void Bound(ref double xMin, ref double yMin, ref double xMax, ref double yMax)
         {
             foreach (var edge in Edges)
@@ -20,6 +26,9 @@ namespace Msdfgen
             }
         }
 
+        /// <summary>
+        /// Adjusts the bounding box to fit the contour with miters.
+        /// </summary>
         public void BoundMiters(ref double xMin, ref double yMin, ref double xMax, ref double yMax, double border, double miterLimit, int polarity)
         {
             if (Edges.Count == 0)
@@ -42,6 +51,9 @@ namespace Msdfgen
             }
         }
 
+        /// <summary>
+        /// Computes the winding number of the contour to determine its orientation.
+        /// </summary>
         public int Winding()
         {
             if (Edges.Count == 0)
@@ -80,6 +92,9 @@ namespace Msdfgen
             return Arithmetics.Sign(total);
         }
 
+        /// <summary>
+        /// Reverses the orientation of the contour.
+        /// </summary>
         public void Reverse()
         {
              int n = Edges.Count;
@@ -95,11 +110,17 @@ namespace Msdfgen
              }
         }
 
+        /// <summary>
+        /// Shoelace formula component for area calculation.
+        /// </summary>
         private static double Shoelace(Vector2 a, Vector2 b)
         {
             return (b.X - a.X) * (a.Y + b.Y);
         }
 
+        /// <summary>
+        /// Updates the bounding box with a point.
+        /// </summary>
         private static void BoundPoint(ref double xMin, ref double yMin, ref double xMax, ref double yMax, Vector2 p)
         {
             if (p.X < xMin) xMin = p.X;

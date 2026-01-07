@@ -2,21 +2,20 @@ using System.Collections.Generic;
 
 namespace Msdfgen
 {
+    /// <summary>
+    /// Component that finds the distance of a point from a shape.
+    /// </summary>
+    /// <typeparam name="TContourCombiner">The combiner used to merge contour distances.</typeparam>
     public class ShapeDistanceFinder<TContourCombiner>
         where TContourCombiner : class
     {
         private Shape shape;
         private TContourCombiner contourCombiner;
-        
-        // We need to cache edge selectors' internal state (EdgeCache).
-        // In C++, shapeEdgeCache is vector<EdgeCache>.
-        // EdgeCache type depends on TSelector.
-        // TSelector depends on TContourCombiner.
-        // I can assume TContourCombiner provides access to selector type via reflection or dynamic?
-        // Or I can store 'object' caches.
-        
         private List<dynamic> shapeEdgeCache;
 
+        /// <summary>
+        /// Initializes the distance finder with a shape and a contour combiner.
+        /// </summary>
         public ShapeDistanceFinder(Shape shape, TContourCombiner contourCombiner)
         {
             this.shape = shape;
@@ -26,7 +25,6 @@ namespace Msdfgen
             for (int i = 0; i < shape.Contours.Count; ++i)
             {
                 Contour contour = shape.Contours[i];
-                // Although contourCombiner might be generic, we expect EdgeSelector to return an IEdgeSelector
                 IEdgeSelector edgeSelector = (IEdgeSelector)((dynamic)contourCombiner).EdgeSelector(i);
                 for (int j = 0; j < contour.Edges.Count; ++j)
                 {
@@ -35,6 +33,9 @@ namespace Msdfgen
             }
         }
         
+        /// <summary>
+        /// Computes the distance of the shape from the specified origin.
+        /// </summary>
         public dynamic Distance(Vector2 origin)
         {
             ((dynamic)contourCombiner).Reset(origin);
@@ -52,7 +53,6 @@ namespace Msdfgen
                     EdgeSegment edge = contour.Edges[j];
                     EdgeSegment nextEdge = contour.Edges[(j + 1) % contour.Edges.Count];
                     
-                    // Use the persistent cache object
                     object cache = shapeEdgeCache[edgeIndex++];
                     edgeSelector.AddEdge(cache, prevEdge, edge, nextEdge);
                     

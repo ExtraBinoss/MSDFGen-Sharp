@@ -15,6 +15,9 @@ namespace Msdfgen
 
         public override Vector2[] ControlPoints => p;
 
+        /// <summary>
+        /// Initializes a new cubic Bezier edge segment with four control points and a color.
+        /// </summary>
         public CubicSegment(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, EdgeColor edgeColor = EdgeColor.WHITE) : base(edgeColor)
         {
             p[0] = p0;
@@ -23,17 +26,26 @@ namespace Msdfgen
             p[3] = p3;
         }
 
+        /// <summary>
+        /// Creates a copy of the edge segment.
+        /// </summary>
         public override EdgeSegment Clone()
         {
             return new CubicSegment(p[0], p[1], p[2], p[3], Color);
         }
 
+        /// <summary>
+        /// Returns the point on the edge specified by the parameter (between 0 and 1).
+        /// </summary>
         public override Vector2 Point(double param)
         {
             Vector2 p12 = Mix(p[1], p[2], param);
             return Mix(Mix(Mix(p[0], p[1], param), p12, param), Mix(p12, Mix(p[2], p[3], param), param), param);
         }
 
+        /// <summary>
+        /// Returns the direction the edge has at the point specified by the parameter.
+        /// </summary>
         public override Vector2 Direction(double param)
         {
              Vector2 tangent = Mix(Mix(p[1] - p[0], p[2] - p[1], param), Mix(p[2] - p[1], p[3] - p[2], param), param);
@@ -45,11 +57,17 @@ namespace Msdfgen
             return tangent;
         }
 
+        /// <summary>
+        /// Returns the change of direction (second derivative) at the point specified by the parameter.
+        /// </summary>
         public override Vector2 DirectionChange(double param)
         {
             return Mix((p[2] - p[1]) - (p[1] - p[0]), (p[3] - p[2]) - (p[2] - p[1]), param);
         }
 
+        /// <summary>
+        /// Returns the minimum signed distance between origin and the edge.
+        /// </summary>
         public override SignedDistance SignedDistance(Vector2 origin, out double param)
         {
             Vector2 qa = p[0] - origin;
@@ -107,6 +125,9 @@ namespace Msdfgen
                 return new SignedDistance(minDistance, Math.Abs(Vector2.DotProduct(Direction(1).Normalize(), (p[3] - origin).Normalize())));
         }
 
+        /// <summary>
+        /// Outputs a list of (at most three) intersections (their X coordinates) with an infinite horizontal scanline at y and returns how many there are.
+        /// </summary>
         public override int ScanlineIntersections(double[] x, int[] dy, double y)
         {
             int total = 0;
@@ -186,6 +207,9 @@ namespace Msdfgen
             return total;
         }
 
+        /// <summary>
+        /// Adjusts the bounding box to fit the edge segment.
+        /// </summary>
         public override void Bound(ref double xMin, ref double yMin, ref double xMax, ref double yMax)
         {
             PointBounds(p[0], ref xMin, ref yMin, ref xMax, ref yMax);
@@ -205,6 +229,9 @@ namespace Msdfgen
                     PointBounds(Point(parameters[i]), ref xMin, ref yMin, ref xMax, ref yMax);
         }
 
+        /// <summary>
+        /// Reverses the edge (swaps its start point and end point).
+        /// </summary>
         public override void Reverse()
         {
             Vector2 tmp = p[0];
@@ -215,18 +242,27 @@ namespace Msdfgen
             p[2] = tmp;
         }
 
+        /// <summary>
+        /// Moves the start point of the edge segment.
+        /// </summary>
         public override void MoveStartPoint(Vector2 to)
         {
             p[1] += to - p[0];
             p[0] = to;
         }
 
+        /// <summary>
+        /// Moves the end point of the edge segment.
+        /// </summary>
         public override void MoveEndPoint(Vector2 to)
         {
             p[2] += to - p[3];
             p[3] = to;
         }
 
+        /// <summary>
+        /// Splits the edge segments into thirds which together represent the original edge.
+        /// </summary>
         public override void SplitInThirds(out EdgeSegment part0, out EdgeSegment part1, out EdgeSegment part2)
         {
             part0 = new CubicSegment(p[0], p[0] == p[1] ? p[0] : Mix(p[0], p[1], 1.0 / 3.0), Mix(Mix(p[0], p[1], 1.0 / 3.0), Mix(p[1], p[2], 1.0 / 3.0), 1.0 / 3.0), Point(1.0 / 3.0), Color);

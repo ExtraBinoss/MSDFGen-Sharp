@@ -4,20 +4,32 @@ using System.Linq;
 
 namespace Msdfgen
 {
+    /// <summary>
+    /// Provides algorithms for coloring edges of a shape to ensure proper multi-channel signed distance field generation.
+    /// </summary>
     public static class EdgeColoring
     {
         private const int MSDFGEN_EDGE_LENGTH_PRECISION = 4;
 
+        /// <summary>
+        /// Divides a range into three parts symmetrically.
+        /// </summary>
         private static int SymmetricalTrichotomy(int position, int n)
         {
              return (int)(3 + 2.875 * position / (n - 1) - 1.4375 + 0.5) - 3;
         }
 
+        /// <summary>
+        /// Returns whether the angle between two directions is a corner.
+        /// </summary>
         private static bool IsCorner(Vector2 aDir, Vector2 bDir, double crossThreshold)
         {
             return Vector2.DotProduct(aDir, bDir) <= 0 || Math.Abs(Vector2.CrossProduct(aDir, bDir)) > crossThreshold;
         }
 
+        /// <summary>
+        /// Estimates the length of an edge segment.
+        /// </summary>
         private static double EstimateEdgeLength(EdgeSegment edge)
         {
             double len = 0;
@@ -31,6 +43,9 @@ namespace Msdfgen
             return len;
         }
 
+        /// <summary>
+        /// Extracts one bit from a seed and updates it.
+        /// </summary>
         private static int SeedExtract2(ref ulong seed)
         {
             int v = (int)(seed & 1);
@@ -38,6 +53,9 @@ namespace Msdfgen
             return v;
         }
 
+        /// <summary>
+        /// Extracts a value from 0 to 2 from a seed and updates it.
+        /// </summary>
         private static int SeedExtract3(ref ulong seed)
         {
             int v = (int)(seed % 3);
@@ -45,18 +63,27 @@ namespace Msdfgen
             return v;
         }
 
+        /// <summary>
+        /// Initializes a color from a seed.
+        /// </summary>
         private static EdgeColor InitColor(ref ulong seed)
         {
             EdgeColor[] colors = { EdgeColor.CYAN, EdgeColor.MAGENTA, EdgeColor.YELLOW };
             return colors[SeedExtract3(ref seed)];
         }
 
+        /// <summary>
+        /// Switches a color to a different one using a seed.
+        /// </summary>
         private static void SwitchColor(ref EdgeColor color, ref ulong seed)
         {
             int shifted = (int)color << (1 + SeedExtract2(ref seed));
             color = (EdgeColor)((shifted | shifted >> 3) & (int)EdgeColor.WHITE);
         }
 
+        /// <summary>
+        /// Switches a color to a different one using a seed, avoiding a banned color.
+        /// </summary>
         private static void SwitchColor(ref EdgeColor color, ref ulong seed, EdgeColor banned)
         {
             EdgeColor combined = (EdgeColor)((int)color & (int)banned);
@@ -66,6 +93,9 @@ namespace Msdfgen
                 SwitchColor(ref color, ref seed);
         }
 
+        /// <summary>
+        /// Assigns colors to edges of the shape using a simple algorithm.
+        /// </summary>
         public static void EdgeColoringSimple(Shape shape, double angleThreshold, ulong seed = 0)
         {
             double crossThreshold = Math.Sin(angleThreshold);
@@ -87,53 +117,9 @@ namespace Msdfgen
 
                 if (corners.Count == 0)
                 {
-                    // // Smooth contour - for MSDF to work properly, we need at least 3 different colors
-                    // // This is critical for smooth shapes like O, 0, etc.
-                    // EdgeColor[] colors = { EdgeColor.CYAN, EdgeColor.MAGENTA, EdgeColor.YELLOW };
                     SwitchColor(ref color, ref seed);
                     foreach (var edge in contour.Edges)
                         edge.Color = color;
-                    // if (contour.Edges.Count >= 3)
-                    // {
-                    //     // Assign colors cyclically
-                    //     for (int i = 0; i < contour.Edges.Count; i++)
-                    //         contour.Edges[i].Color = colors[i % 3];
-                    // }
-                    // else if (contour.Edges.Count == 2)
-                    // {
-                    //     // Split first edge into thirds, giving us 4 edges total
-                    //     EdgeSegment[] parts = new EdgeSegment[3];
-                    //     contour.Edges[0].SplitInThirds(out parts[0], out parts[1], out parts[2]);
-                    //     var edge1 = contour.Edges[1];
-                    //     contour.Edges.Clear();
-                    //     parts[0].Color = EdgeColor.CYAN;
-                    //     parts[1].Color = EdgeColor.MAGENTA;
-                    //     parts[2].Color = EdgeColor.YELLOW;
-                    //     edge1.Color = EdgeColor.CYAN;
-                    //     contour.Edges.Add(parts[0]);
-                    //     contour.Edges.Add(parts[1]);
-                    //     contour.Edges.Add(parts[2]);
-                    //     contour.Edges.Add(edge1);
-                    // }
-                    // else if (contour.Edges.Count == 1)
-                    // {
-                    //     // Split into thirds
-                    //     EdgeSegment[] parts = new EdgeSegment[3];
-                    //     contour.Edges[0].SplitInThirds(out parts[0], out parts[1], out parts[2]);
-                    //     contour.Edges.Clear();
-                    //     parts[0].Color = EdgeColor.CYAN;
-                    //     parts[1].Color = EdgeColor.MAGENTA;
-                    //     parts[2].Color = EdgeColor.YELLOW;
-                    //     contour.Edges.Add(parts[0]);
-                    //     contour.Edges.Add(parts[1]);
-                    //     contour.Edges.Add(parts[2]);
-                    // }
-                    // else
-                    // {
-                    //     // Empty contour, just assign single color
-                    //     foreach (var edge in contour.Edges)
-                    //         edge.Color = color;
-                    // }
                 }
                 else if (corners.Count == 1)
                 {
@@ -206,6 +192,9 @@ namespace Msdfgen
             public EdgeColor Color;
         }
 
+        /// <summary>
+        /// Assigns colors to edges of the shape using an algorithm that treats sharp corners differently.
+        /// </summary>
         public static void EdgeColoringInkTrap(Shape shape, double angleThreshold, ulong seed = 0)
         {
             double crossThreshold = Math.Sin(angleThreshold);
@@ -309,8 +298,7 @@ namespace Msdfgen
                         if (!corners[i].Minor)
                         {
                             --majorCornerCount;
-                            SwitchColor(ref color, ref seed, (EdgeColor)((majorCornerCount == 0 ? 0 : 1) * (int)initialColor)); // !majorCornerCount -> if 0 then 1 else 0. Wait. !0 is 1. !nonzero is 0.
-                            // C++: !majorCornerCount. if count is 0, then 1. else 0.
+                            SwitchColor(ref color, ref seed, (EdgeColor)((majorCornerCount == 0 ? 0 : 1) * (int)initialColor)); 
                             var c = corners[i];
                             c.Color = color;
                             corners[i] = c;

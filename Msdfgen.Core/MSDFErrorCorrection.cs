@@ -5,12 +5,20 @@ using static Msdfgen.EquationSolver;
 
 namespace Msdfgen
 {
+    /// <summary>
+    /// Provides methods for correcting artifacts in multi-channel signed distance fields.
+    /// </summary>
     public class MSDFErrorCorrection
     {
+        /// <summary>
+        /// Flags used in the stencil buffer to mark errors and protected texels.
+        /// </summary>
         [Flags]
         public enum Flags : byte
         {
+            /// <summary> Texel is an artifact candidate. </summary>
             ERROR = 1,
+            /// <summary> Texel is protected from correction. </summary>
             PROTECTED = 2
         }
 
@@ -24,6 +32,9 @@ namespace Msdfgen
         private double minDeviationRatio;
         private double minImproveRatio;
 
+        /// <summary>
+        /// Initializes the error correction component with a stencil buffer and transformation.
+        /// </summary>
         public MSDFErrorCorrection(Bitmap<float> stencil, SDFTransformation transformation)
         {
             this.stencil = stencil;
@@ -37,9 +48,18 @@ namespace Msdfgen
                     stencil[x, y, 0] = 0;
         }
 
+        /// <summary> Sets the minimum deviation ratio for artifact detection. </summary>
         public void SetMinDeviationRatio(double minDeviationRatio) => this.minDeviationRatio = minDeviationRatio;
+        /// <summary> Sets the minimum improve ratio for applying corrections. </summary>
         public void SetMinImproveRatio(double minImproveRatio) => this.minImproveRatio = minImproveRatio;
 
+        /// <summary>
+        /// Performs the complete error correction pass on the output MSDF bitmap.
+        /// </summary>
+        /// <param name="output">The multi-channel distance field to correct.</param>
+        /// <param name="shape">The source shape for distance verification.</param>
+        /// <param name="transformation">The transformation used to generate the field.</param>
+        /// <param name="config">The error correction configuration.</param>
         public static void Correct(Bitmap<float> output, Shape shape, SDFTransformation transformation, ErrorCorrectionConfig config)
         {
             if (config.Mode == ErrorCorrectionConfig.DistanceErrorCorrectionMode.DISABLED)
