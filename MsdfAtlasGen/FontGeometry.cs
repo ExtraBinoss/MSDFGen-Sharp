@@ -230,6 +230,11 @@ namespace MsdfAtlasGen
         }
 
         /// <summary>
+        /// Retrieves the kerning dictionary.
+        /// </summary>
+        public Dictionary<(int, int), double> GetKernings() => _kerning;
+
+        /// <summary>
         /// Sets the name of the font.
         /// </summary>
         public void SetName(string name)

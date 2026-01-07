@@ -124,7 +124,8 @@ namespace MsdfAtlasGen
             FontMetrics metrics,
             YAxisOrientation yDirection = YAxisOrientation.Downward,
             Padding? outerPixelPadding = null,
-            int spacing = 0)
+            int spacing = 0,
+            double outputScale = 1.0)
         {
             if (fonts.Length == 0) return;
 
@@ -143,15 +144,15 @@ namespace MsdfAtlasGen
                 Info = new BmFontInfo
                 {
                     Face = fontName,
-                    Size = (int)fontSize,
+                    Size = (int)Math.Round(fontSize * outputScale),
                     Unicode = 1,
                     Padding = $"{paddingTop},{paddingRight},{paddingBottom},{paddingLeft}",
                     Spacing = $"{spacing},{spacing}"
                 },
                 Common = new BmFontCommon
                 {
-                    LineHeight = (int)Math.Ceiling(metrics.LineHeight),
-                    Base = (int)Math.Ceiling(metrics.AscenderY),
+                    LineHeight = (int)Math.Ceiling(metrics.LineHeight * outputScale),
+                    Base = (int)Math.Ceiling(metrics.AscenderY * outputScale),
                     ScaleW = atlasWidth,
                     ScaleH = atlasHeight
                 },
@@ -167,7 +168,7 @@ namespace MsdfAtlasGen
                         ImageType.Psdf => "psdf",
                         ImageType.Msdf => "msdf",
                         ImageType.Mtsdf => "mtsdf",
-                        _ => "sdf"
+                        _ => "msdf"
                     },
                     DistanceRange = (int)distanceRange
                 },
@@ -181,17 +182,22 @@ namespace MsdfAtlasGen
                 glyph.GetBoxRect(out int x, out int y, out int w, out int h);
 
                 int glyphIndex = glyph.GetIndex();
-                float xadvance = (float)glyph.GetAdvanceUnscaled();
+                
+                // Advance needs scaling because it comes from unscaled metrics
+                float xadvance = (float)(glyph.GetAdvanceUnscaled() * outputScale);
                 
                 // Use box bounds for positioning (includes padding, consistent with the image size)
                 glyph.GetBoxPlaneBounds(out double pl, out double pb, out double pr, out double pt);
                 
-                // BMFont format (uses top-left origin):
-                // - xoffset: horizontal offset from cursor position to left edge of glyph quad
-                // - yoffset: vertical offset from baseline to TOP edge of glyph quad (negative = above baseline)
-                // The plane bounds returned by GetBoxPlaneBounds are relative to the glyph origin (0,0)
+                // BMFont uses top-left origin for Y axis logic relative to the "line height" or "base".
+                // BmFontCommon.Base = AscenderY (SCALED).
+                // Distance from Top Line to Glyph Top = Base - GlyphTopFromBaseline
+                // where Base is distance from Top Line to Baseline.
+                // pt is GlyphTopFromBaseline (SCALED by packer via GetBoxPlaneBounds).
+                // metrics.AscenderY is unscaled, so we need to scale it.
+                
                 float xoffset = (float)pl;
-                float yoffset = -(float)pt;
+                float yoffset = (float)(metrics.AscenderY * outputScale - pt);
 
                 int codepoint = (int)glyph.GetCodepoint();
                 string charString = codepoint != 0 ? char.ConvertFromUtf32(codepoint) : "";
@@ -215,6 +221,34 @@ namespace MsdfAtlasGen
             }
 
             bmFont.Chars.Count = bmFont.Chars.CharList.Count;
+
+            // Export Kernings
+            var fontKernings = font.GetKernings();
+
+            // We need to iterate the Chars we just added to build the map
+            var indexToId = new Dictionary<int, int>();
+            foreach (var c in bmFont.Chars.CharList)
+            {
+                indexToId[c.Index] = c.Id;
+            }
+
+            if (fontKernings != null)
+            {
+                foreach (var kvp in fontKernings)
+                {
+                    var (firstIndex, secondIndex) = kvp.Key;
+                    if (indexToId.TryGetValue(firstIndex, out int firstId) && indexToId.TryGetValue(secondIndex, out int secondId))
+                    {
+                        bmFont.Kernings.KerningList.Add(new BmFontKerning
+                        {
+                            First = firstId,
+                            Second = secondId,
+                            Amount = (int)Math.Round(kvp.Value * outputScale)
+                        });
+                    }
+                }
+            }
+            bmFont.Kernings.Count = bmFont.Kernings.KerningList.Count;
 
             // Serialize to XML
             var serializer = new XmlSerializer(typeof(BmFont));

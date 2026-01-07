@@ -297,9 +297,10 @@ namespace MsdfAtlasGen.Cli
                 double distanceRange = _config.PxRange.Upper - _config.PxRange.Lower;
 
                 var metrics = fontGeometry.GetMetrics();
+                double packerScale = packer.GetScale();
 
                 FntExporter.Export(
-                    fonts.ToArray(),
+                    [.. fonts],
                     _config.Type,
                     width,
                     height,
@@ -310,7 +311,8 @@ namespace MsdfAtlasGen.Cli
                     metrics,
                     _config.YOrigin,
                     _config.OuterPxPadding,
-                    _config.Spacing
+                    _config.Spacing,
+                    packerScale
                 );
             }
 

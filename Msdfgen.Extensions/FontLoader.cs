@@ -236,9 +236,6 @@ namespace Msdfgen.Extensions
             return true;
         }
 
-        /// <summary>
-        /// Outputs the total number of glyphs available in the font.
-        /// </summary>
         public static bool GetGlyphCount(out uint count, FontHandle font)
         {
             count = 0;
@@ -248,6 +245,15 @@ namespace Msdfgen.Extensions
             FT_FaceRec_* face = font.Face;
             count = (uint)(long)face->num_glyphs;
             return true;
+        }
+
+        public static bool HasKerningInfo(FontHandle font)
+        {
+            if (font == null || font.Face == null)
+                return false;
+            
+            // FT_FACE_FLAG_KERNING = 64 (1 << 6)
+            return ((long)font.Face->face_flags & 64) != 0;
         }
 
         /// <summary>
