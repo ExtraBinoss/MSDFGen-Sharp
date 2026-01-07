@@ -29,3 +29,8 @@ MsdfAtlasGen/obj/**
 MsdfAtlasGen.Cli/bin/**
 MsdfAtlasGen.Cli/obj/**
 MsdfAtlasGen.Cli/output/**
+
+# TestDotnetPackage
+test_dotnet_package
+test_dotnet_package/bin/**
+test_dotnet_package/obj/**
