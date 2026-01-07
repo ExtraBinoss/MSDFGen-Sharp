@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # Job 1: Build Everything (Triggers on [BUILD])
+  build-all:
+    if: contains(github.event.head_commit.message, '[BUILD]')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 9.0.x
+    - name: Restore dependencies
+      run: dotnet restore Msdfgen.Net.sln
+    - name: Build All
+      run: dotnet build Msdfgen.Net.sln --no-restore -c Release
+
+  # Job 2: Build & Publish Libraries (Triggers on [PUBLISH])
+  publish-libs:
+    if: contains(github.event.head_commit.message, '[PUBLISH]') && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 9.0.x
+    
+    # Core
+    - name: Restore Core
+      run: dotnet restore Msdfgen.Core/Msdfgen.Core.csproj
+    - name: Pack Core
+      run: dotnet pack Msdfgen.Core/Msdfgen.Core.csproj --no-restore -c Release -o nupkgs
+
+    # AtlasGen
+    - name: Restore AtlasGen
+      run: dotnet restore MsdfAtlasGen/MsdfAtlasGen.csproj
+    - name: Pack AtlasGen
+      run: dotnet pack MsdfAtlasGen/MsdfAtlasGen.csproj --no-restore -c Release -o nupkgs
+
+    # Extensions
+    - name: Restore Extensions
+      run: dotnet restore Msdfgen.Extensions/Msdfgen.Extensions.csproj
+    - name: Pack Extensions
+      run: dotnet pack Msdfgen.Extensions/Msdfgen.Extensions.csproj --no-restore -c Release -o nupkgs
+
+    # Publish
+    - name: Push to NuGet
+      run: dotnet nuget push nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
