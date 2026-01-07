@@ -23,6 +23,16 @@ The repository is organized into several components to separate core logic, exte
 > **MSDFGen-Sharp is a port of the original msdfgen and msdf-atlas-gen projects. It is not a direct port of the original CLI tools.**
 > **If you want to use the original CLI tools, you can find them [here MSDFGen](https://github.com/Chlumsky/msdfgen) and [here MSDFAtlasGen](https://github.com/Chlumsky/msdf-atlas-gen).**
 
+## 📦 Installation
+
+To use **MSDF-Sharp** in your project, install the package from NuGet:
+
+```bash
+dotnet add package MSDF-Sharp
+```
+
+Alternatively, you can find it on [NuGet.org](https://www.nuget.org/packages/MSDF-Sharp).
+
 ## ✨ Key Features
 
 - **Multi-channel Signed Distance Fields (MSDF)**: Superior sharpness for text rendering at any scale.
