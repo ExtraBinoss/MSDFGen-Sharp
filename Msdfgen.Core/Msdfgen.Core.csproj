@@ -4,6 +4,12 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageId>MSDF-Sharp.Core</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>ExtraBinoss</Authors>
+    <Description>Core MSDF generation algorithms for MSDF-Sharp.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/ExtraBinoss/MSDFGen-Sharp</RepositoryUrl>
   </PropertyGroup>
 
 </Project>

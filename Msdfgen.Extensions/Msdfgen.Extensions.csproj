@@ -10,6 +10,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PackageId>MSDF-Sharp.Extensions</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>ExtraBinoss</Authors>
+    <Description>Extensions for FreeType and ImageSharp integration for MSDF-Sharp.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/ExtraBinoss/MSDFGen-Sharp</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
