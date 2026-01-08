@@ -146,7 +146,7 @@ namespace MsdfAtlasGen.Cli
 
             // 3. Load Charset
             Console.WriteLine("[PHASE] Loading Charset and Metrics...");
-            Charset charset = LoadCharset();
+            Charset charset = LoadCharset(fontHandle);
 
             // 4. Build FontGeometry
             var fonts = new List<FontGeometry>();
@@ -431,8 +431,54 @@ namespace MsdfAtlasGen.Cli
             return path;
         }
 
-        private Charset LoadCharset()
+        private Charset LoadCharset(FontHandle font)
         {
+            if (_config.AllGlyphs && font != null)
+            {
+                 Console.WriteLine("Mode: All Glyphs (reading from font face)");
+                 var charset = new Charset();
+                 if (FontLoader.GetAvailableCodepoints(out var codepoints, font))
+                 {
+                     foreach (var cp in codepoints)
+                         charset.Add(cp);
+                 }
+                 Console.WriteLine($"Found {charset.Count} available glyphs/codepoints in font.");
+                 return charset;
+            }
+
+
+
+            if (!string.IsNullOrEmpty(_config.CharsetPath))
+            {
+                if (_config.CharsetPath.Equals("eascii", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Charset.EASCII;
+                }
+                if (_config.CharsetPath.Equals("ascii", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Charset.ASCII;
+                }
+
+                if (File.Exists(_config.CharsetPath))
+                {
+                    // Simple charset parser - just read characters from file
+                    var charset = new Charset();
+                    string content = File.ReadAllText(_config.CharsetPath);
+                    int duplicates = 0;
+                    foreach (char c in content)
+                    {
+                        if (!char.IsControl(c))
+                        {
+                            if (!charset.Add(c))
+                                duplicates++;
+                        }
+                    }
+                    if (duplicates > 0)
+                        Console.WriteLine($"Ignored {duplicates} duplicate characters in charset file.");
+                    return charset;
+                }
+            }
+
             if (!string.IsNullOrEmpty(_config.InlineChars))
             {
                 var charset = new Charset();

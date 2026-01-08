@@ -19,9 +19,22 @@ namespace MsdfAtlasGen
         private static Charset CreateAsciiCharset()
         {
             var ascii = new Charset();
-            for (uint cp = 0x20; cp < 0x7f; ++cp)
-                ascii.Add(cp);
+            for (int i = 0x20; i < 0x7f; ++i)
+                ascii.Add((uint)i);
             return ascii;
+        }
+
+        public static readonly Charset EASCII = CreateExtendedAsciiCharset();
+
+        /// <summary>
+        /// Creates a charset containing all printable ASCII and Extended ASCII (Latin-1) characters.
+        /// </summary>
+        private static Charset CreateExtendedAsciiCharset()
+        {
+            var eascii = new Charset();
+            for (int i = 0x20; i <= 0xFF; ++i)
+                eascii.Add((uint)i);
+            return eascii;
         }
 
         /// <summary>

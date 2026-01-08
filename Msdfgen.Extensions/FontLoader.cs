@@ -247,6 +247,28 @@ namespace Msdfgen.Extensions
             return true;
         }
 
+        /// <summary>
+        /// Retrieves all Unicode codepoints supported by the font.
+        /// </summary>
+        public static bool GetAvailableCodepoints(out System.Collections.Generic.List<uint> codepoints, FontHandle font)
+        {
+            codepoints = [];
+            if (font == null || font.Face == null)
+                return false;
+
+            FT_FaceRec_* face = font.Face;
+            uint glyphIndex;
+            ulong charCode = FT_Get_First_Char(face, &glyphIndex);
+
+            while (glyphIndex != 0)
+            {
+                codepoints.Add((uint)charCode);
+                charCode = FT_Get_Next_Char(face, checked((UIntPtr)charCode), &glyphIndex);
+            }
+
+            return true;
+        }
+
         public static bool HasKerningInfo(FontHandle font)
         {
             if (font == null || font.Face == null)
