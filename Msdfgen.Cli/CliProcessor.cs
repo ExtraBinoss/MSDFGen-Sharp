@@ -63,29 +63,29 @@ namespace Msdfgen.Cli
         {
             if (string.IsNullOrEmpty(options.FontFile))
             {
-                Console.Error.WriteLine("No font specified. Use: msdf -font <font.ttf> '<char>'");
+                Console.Error.WriteLine("[Error] Missing font argument. Please specify a font file.\nUsage: msdf -font <file.ttf> '<character>'");
                 return null;
             }
 
-            using var ft = FreetypeHandle.Initialize();
-            if (ft == null)
+            using var font = FreetypeHandle.Initialize();
+            if (font == null)
             {
-                Console.Error.WriteLine("Failed to initialize FreeType library.");
+                Console.Error.WriteLine("[Fatal Error] Could not initialize FreeType library.");
                 return null;
             }
 
-            using var fontHandle = FontHandle.LoadFont(ft, options.FontFile);
+            using var fontHandle = FontHandle.LoadFont(font, options.FontFile);
             if (fontHandle == null)
             {
-                Console.Error.WriteLine("Failed to load font.");
+                Console.Error.WriteLine("[Error] Unable to load the font file. Check if the path exists and the file is valid.");
                 return null;
             }
 
             var shape = new Shape();
             uint codepoint = options.CharCode;
-            if (!FontLoader.LoadGlyph(shape, fontHandle, codepoint, FontCoordinateScaling.None, out double advance))
+            if (!FontLoader.LoadGlyph(shape, fontHandle, codepoint, FontCoordinateScaling.EmNormalized, out double advance))
             {
-                Console.Error.WriteLine($"Failed to load glyph for U+{codepoint:X4}.");
+                Console.Error.WriteLine($"[Error] Could not load glyph data for character U+{codepoint:X4}. It may not exist in the font.");
                 return null;
             }
 
@@ -96,7 +96,7 @@ namespace Msdfgen.Cli
 
             // Fix winding if needed (outside distance positive)
             var bounds = shape.GetBounds();
-            Vector2 outerPoint = new Vector2(
+            Vector2 outerPoint = new(
                 bounds.L - (bounds.R - bounds.L) - 1,
                 bounds.B - (bounds.T - bounds.B) - 1
             );
@@ -111,7 +111,7 @@ namespace Msdfgen.Cli
             return shape;
         }
 
-        private void PrintShapeInfo(Shape shape)
+        private static void PrintShapeInfo(Shape shape)
         {
             Console.WriteLine($"Shape has {shape.Contours.Count} contour(s)");
             for (int c = 0; c < shape.Contours.Count; c++)
@@ -121,7 +121,7 @@ namespace Msdfgen.Cli
             }
         }
 
-        private void PrintEdgeColors(Shape shape)
+        private static void PrintEdgeColors(Shape shape)
         {
              for (int c = 0; c < shape.Contours.Count; c++)
             {
@@ -133,7 +133,7 @@ namespace Msdfgen.Cli
             }
         }
 
-        private void ConfigureGeometry(Shape shape, CliOptions options)
+        private static void ConfigureGeometry(Shape shape, CliOptions options)
         {
             // Autoframe logic
             if (!options.ScaleSpecified && !options.AutoFrame)

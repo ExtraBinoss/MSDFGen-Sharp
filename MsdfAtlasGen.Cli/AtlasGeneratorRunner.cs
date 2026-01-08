@@ -62,14 +62,14 @@ namespace MsdfAtlasGen.Cli
             using var ft = FreetypeHandle.Initialize();
             if (ft == null)
             {
-                Console.Error.WriteLine("Failed to initialize FreeType library.");
+                Console.Error.WriteLine("[Fatal Error] Failed to initialize the FreeType library. Ensure native dependencies are correctly installed.");
                 return 1;
             }
 
             using var fontHandle = FontHandle.LoadFont(ft, _config.FontPath);
             if (fontHandle == null)
             {
-                Console.Error.WriteLine("Failed to load font via FreeType.");
+                Console.Error.WriteLine($"[Error] Failed to load the font file at '{_config.FontPath}'. Please verify the file path and ensure it is a valid font format.");
                 return 1;
             }
 
@@ -197,10 +197,10 @@ namespace MsdfAtlasGen.Cli
                 packer.SetMinimumScale(_config.MinSize / _config.Size);
             }
 
-            int result = packer.Pack(glyphs);
-            if (result < 0)
+            int remaining = packer.Pack(glyphs);
+            if (remaining == -1)
             {
-                Console.Error.WriteLine("Packing failed");
+                Console.Error.WriteLine($"[Error] Atlas packing failed. The selected glyphs cannot fit within the specified dimensions ({_config.Width}x{_config.Height}) with the current settings. Try increasing dimensions or reducing font size.");
                 return 1;
             }
 

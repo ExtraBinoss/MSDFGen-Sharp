@@ -16,7 +16,7 @@ namespace MsdfAtlasGen.Cli
 
             if (!config.IsValid)
             {
-                Console.Error.WriteLine("Error: No font specified. Use -font <fontfile.ttf>");
+                Console.Error.WriteLine("[Error] No font file specified. You must provide a font using the '-font' argument.\nUsage Example: MsdfAtlasGen -font MyFont.ttf");
                 return 1;
             }
 
