@@ -570,7 +570,9 @@ namespace MsdfAtlasGen.Cli
             Console.WriteLine("-------------------------------------------------------------------------------");
             Console.WriteLine($"  Font Path:        {_config.FontPath}");
             Console.WriteLine($"  Font Name:        {_config.FontName ?? "Auto"}");
-            Console.WriteLine($"  Charset:          {(!string.IsNullOrEmpty(_config.InlineChars) ? "Inline Content" : (string.IsNullOrEmpty(_config.CharsetPath) ? "ASCII (Default)" : _config.CharsetPath))}");
+            Console.WriteLine($"  Font Name:        {_config.FontName ?? "Auto"}");
+            string charsetInfo = _config.AllGlyphs ? "All Glyphs" : (!string.IsNullOrEmpty(_config.InlineChars) ? "Inline Content" : (string.IsNullOrEmpty(_config.CharsetPath) ? "ASCII (Default)" : _config.CharsetPath));
+            Console.WriteLine($"  Charset:          {charsetInfo}");
             Console.WriteLine($"  Atlas Type:       {_config.Type}");
             Console.WriteLine($"  Output Format:    {_config.Format}");
             Console.WriteLine($"  Glyph Size:       {_config.Size} pt");

@@ -201,6 +201,12 @@ namespace MsdfAtlasGen
 
                 int codepoint = (int)glyph.GetCodepoint();
                 string charString = codepoint != 0 ? char.ConvertFromUtf32(codepoint) : "";
+                
+                // Sanitize invalid XML characters (control chars)
+                if (charString.Length > 0 && char.IsControl(charString[0]) && charString[0] != '\t' && charString[0] != '\n' && charString[0] != '\r')
+                {
+                    charString = ""; // Omit invalid characters from the "char" attribute (id/index are what matters)
+                }
 
                 bmFont.Chars.CharList.Add(new BmFontChar
                 {

@@ -7,10 +7,19 @@ The primary tool for generating font atlases in Multi-channel Signed Distance Fi
 
 ## 🚀 Quick Start
 
-Generate a 1024x1024 atlas for the Roboto font with BMFont outputs and a test render:
 
 ```bash
+# Generate a 1024x1024 atlas for the Roboto font with BMFont outputs and a test render:
+
 dotnet run -c Release -- -font "../assets/test_fonts/Roboto-Regular.ttf" -size 90 -dimensions 1024 1024 -fnt -testrender -spacing 2 -miterlimit 3.0 -coloringstrategy simple -errorcorrection indiscriminate
+
+# Generate a 1024x1024 atlas for the RobotoFont with BMFont outputs, a test render and EASCII (more characters):
+
+dotnet run -c Release -- -font "../assets/test_fonts/Roboto-Regular.ttf" -size 90 -dimensions 1024 1024 -fnt -testrender -spacing 2 -miterlimit 3.0 -coloringstrategy simple -errorcorrection indiscriminate -charset eascii
+
+# Generate a 4092x4092 atlas for the Roboto font with BMFont outputs and a test render with allglyphs (may be big and hard to read at first glance.):
+
+dotnet run -c Release -- -font "../assets/test_fonts/Roboto-Regular.ttf" -size 10 -dimensions 4092 4092 -fnt -testrender -spacing 2 -miterlimit 3.0 -coloringstrategy simple -errorcorrection indiscriminate -allglyphs 
 ```
 
 ---
@@ -21,9 +30,9 @@ dotnet run -c Release -- -font "../assets/test_fonts/Roboto-Regular.ttf" -size 9
 | Flag | Arguments | Description |
 | :--- | :--- | :--- |
 | `-font` | `<path>` | **Required.** Path to the TrueType or OpenType font file. |
-| `-chars` | `"<string>"` | List of characters to include in the atlas (e.g., `"ABCabc123"`). |
-| `-charset` | `<path>` | Path to a text file containing the set of characters. |
-| `-allglyphs` | *(None)* | Includes every single glyph found in the font file. |
+| `-chars` | `<chars>` | Sets characters inline (e.g., `"ABCabc123"`). |
+| `-charset` | `<charset.txt>` | Sets the character set file (or use 'ascii' / 'eascii'). |
+| `-allglyphs` | *(None)* | Use all glyphs available in the font file. |
 | `-fontscale` | `<value>` | Global scaling factor for all glyphs. |
 | `-fontname` | `<name>` | Override the font name in the exported metadata. |
 
