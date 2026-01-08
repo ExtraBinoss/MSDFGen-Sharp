@@ -15,7 +15,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>MSDF-Sharp</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>ExtraBinoss</Authors>
     <Description>MSDF Atlas generation and packing utilities for MSDF-Sharp.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
