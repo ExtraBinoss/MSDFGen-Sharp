@@ -54,51 +54,69 @@ namespace MsdfAtlasGen
         /// </summary>
         public int Pack(Rectangle[] rectangles)
         {
-            var remainingRects = new List<int>(rectangles.Length);
-            for (int i = 0; i < rectangles.Length; ++i)
-                remainingRects.Add(i);
+            // 1. Create indices and sort them by area/size descending (Best Fit Decreasing)
+            // This transforms the algorithm from O(N^3) (Global Best Fit) to O(N^2) (Best Fit Decreasing).
+            // N=10000 -> 10^8 ops instead of 10^12.
+            var indices = new int[rectangles.Length];
+            for (int i = 0; i < rectangles.Length; i++) indices[i] = i;
 
-            while (remainingRects.Count > 0)
+            Array.Sort(indices, (a, b) => 
             {
-                int bestFit = WorstFit;
-                int bestSpace = -1;
-                int bestRect = -1;
+                var rA = rectangles[a];
+                var rB = rectangles[b];
+                int areaA = rA.W * rA.H;
+                int areaB = rB.W * rB.H;
+                if (areaA != areaB) return areaB.CompareTo(areaA);
+                return rB.H.CompareTo(rA.H); // Secondary sort by height
+            });
 
+            int failedCount = 0;
+
+            // 2. Iterate through sorted rectangles and find best space for each
+            foreach (int rectIndex in indices)
+            {
+                ref Rectangle rect = ref rectangles[rectIndex]; // ref to modify X/Y directly
+                
+                int bestFit = WorstFit;
+                int bestSpaceIndex = -1;
+
+                // Scan all spaces to find the best fit for this specific rectangle
                 for (int i = 0; i < _spaces.Count; ++i)
                 {
                     Rectangle space = _spaces[i];
-                    for (int j = 0; j < remainingRects.Count; ++j)
+                    
+                    // Exact match check
+                    if (rect.W == space.W && rect.H == space.H)
                     {
-                        Rectangle rect = rectangles[remainingRects[j]];
-                        if (rect.W == space.W && rect.H == space.H)
+                        bestSpaceIndex = i;
+                        break; // Perfect fit, stop searching
+                    }
+                    
+                    if (rect.W <= space.W && rect.H <= space.H)
+                    {
+                        int fit = RateFit(rect.W, rect.H, space.W, space.H);
+                        if (fit < bestFit)
                         {
-                            bestSpace = i;
-                            bestRect = j;
-                            goto BestFitFound;
-                        }
-                        if (rect.W <= space.W && rect.H <= space.H)
-                        {
-                            int fit = RateFit(rect.W, rect.H, space.W, space.H);
-                            if (fit < bestFit)
-                            {
-                                bestSpace = i;
-                                bestRect = j;
-                                bestFit = fit;
-                            }
+                            bestSpaceIndex = i;
+                            bestFit = fit;
                         }
                     }
                 }
-                if (bestSpace < 0 || bestRect < 0)
-                    break;
 
-                BestFitFound:
-                int rectIndex = remainingRects[bestRect];
-                rectangles[rectIndex].X = _spaces[bestSpace].X;
-                rectangles[rectIndex].Y = _spaces[bestSpace].Y;
-                SplitSpace(bestSpace, rectangles[rectIndex].W, rectangles[rectIndex].H);
-                RemoveFromUnorderedVector(remainingRects, bestRect);
+                if (bestSpaceIndex != -1)
+                {
+                    // Place the rectangle
+                    rect.X = _spaces[bestSpaceIndex].X;
+                    rect.Y = _spaces[bestSpaceIndex].Y;
+                    SplitSpace(bestSpaceIndex, rect.W, rect.H);
+                }
+                else
+                {
+                    failedCount++;
+                }
             }
-            return remainingRects.Count;
+            
+            return failedCount;
         }
 
         /// <summary>

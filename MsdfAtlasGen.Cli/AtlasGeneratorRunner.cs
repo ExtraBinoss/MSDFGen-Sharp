@@ -57,6 +57,9 @@ namespace MsdfAtlasGen.Cli
         {
             PrintConfiguration();
 
+            var phaseTimings = new List<(string Name, TimeSpan Duration)>();
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
             // 1. Load font via FreeType
             Console.WriteLine("[PHASE] Loading FreeType and Font...");
             using var ft = FreetypeHandle.Initialize();
@@ -72,6 +75,10 @@ namespace MsdfAtlasGen.Cli
                 Console.Error.WriteLine($"[Error] Failed to load the font file at '{_config.FontPath}'. Please verify the file path and ensure it is a valid font format.");
                 return 1;
             }
+            sw.Stop();
+            Console.WriteLine($"  Time: {sw.Elapsed.TotalSeconds:F3}s");
+            phaseTimings.Add(("Init & Load Font", sw.Elapsed));
+            sw.Restart();
 
             // Get font name for default filenames
             string fontName = !string.IsNullOrEmpty(_config.FontName)
@@ -79,13 +86,6 @@ namespace MsdfAtlasGen.Cli
                 : Path.GetFileNameWithoutExtension(_config.FontPath);
 
             // 2. Prepare output paths
-            // FNT folder contains both .fnt and .png (they go together)
-            // If ImageOut is not explicitly requested, but FNT is, we just use the name from FNT? 
-            // Actually, if ImageOut is NOT empty, use it. If it is empty:
-            // - If ImageOutRequested=true, default name.
-            // - If FntRequested, default name in FNT folder?
-            // - If AutoGenerate, default name.
-            
             bool autoGenerateOutputs = !_config.ImageOutRequested && 
                                        !_config.JsonOutRequested && 
                                        !_config.CsvOutRequested &&
@@ -103,22 +103,12 @@ namespace MsdfAtlasGen.Cli
             }
             else if (autoGenerateOutputs)
             {
-                 // Default behavior (as per requirement: "if I omit ... it just creates those")
-                 // The requirement specifically said "if I omit -imageout and -json".
-                 // So we treat auto-generate as generating image + json.
-                 imageOut = ResolveOutputPath("", $"{fontName}.png", FntFolder); // Or JsonFolder? Default usually PNG somewhere. Let's stick to FntFolder or root?
-                 // The previous implementation used FntFolder for PNG.
+                 imageOut = ResolveOutputPath("", $"{fontName}.png", FntFolder); 
             }
-            // If still null (e.g. only -json requested), we assume we DO need an image for atlas generation?
-            // Actually, MSDF gen ALWAYS creates an image. We probably should save it.
-            // But if user ONLY requested JSON? Maybe they want the metrics only? 
-            // The msdf-atlas-gen typically generates image.
-            // Let's ensure imageOut is set if we are running generator.
             if (imageOut == null) 
             {
                  imageOut = ResolveOutputPath("", $"{fontName}.png", FntFolder);
             }
-
 
             string? jsonOut = null;
             if (_config.JsonOutRequested)
@@ -156,14 +146,22 @@ namespace MsdfAtlasGen.Cli
             // Pass Size * FontScale as the geometry scale
             fontGeometry.LoadCharset(fontHandle, _config.Size * _config.FontScale, charset);
             fontGeometry.SetName(fontName);
+            sw.Stop();
+            Console.WriteLine($"  Time: {sw.Elapsed.TotalSeconds:F3}s");
+            phaseTimings.Add(("Load Charset & Parse", sw.Elapsed));
+            sw.Restart();
 
             // 5. Edge Coloring
+            Console.WriteLine("[PHASE] Edge Coloring...");
             foreach (var glyph in fontGeometry.GetGlyphs().Glyphs)
             {
                 glyph.EdgeColoring(GetColoringFunction(), _config.AngleThreshold, _config.Seed);
             }
-
             fonts.Add(fontGeometry);
+            sw.Stop();
+            Console.WriteLine($"  Time: {sw.Elapsed.TotalSeconds:F3}s");
+            phaseTimings.Add(("Edge Coloring", sw.Elapsed));
+            sw.Restart();
 
             // 6. Pack
             Console.WriteLine("[PHASE] Packing Glyphs...");
@@ -208,6 +206,10 @@ namespace MsdfAtlasGen.Cli
             int width, height;
             packer.GetDimensions(out width, out height);
             Console.WriteLine($"  Atlas dimensions: {width} x {height}");
+            sw.Stop();
+            Console.WriteLine($"  Time: {sw.Elapsed.TotalSeconds:F3}s");
+            phaseTimings.Add(("Packing", sw.Elapsed));
+            sw.Restart();
 
             // 7. Generate MSDF atlas
             Console.WriteLine("[PHASE] Generating Atlas Pixels...");
@@ -258,6 +260,10 @@ namespace MsdfAtlasGen.Cli
 
             generator.Generate(glyphs, progress);
             Console.WriteLine(); // Newline after completion
+            sw.Stop();
+            Console.WriteLine($"  Time: {sw.Elapsed.TotalSeconds:F3}s");
+            phaseTimings.Add(("Generation", sw.Elapsed));
+            sw.Restart();
 
             // 8. Save outputs
             Console.WriteLine("[PHASE] Saving Outputs...");
@@ -326,6 +332,24 @@ namespace MsdfAtlasGen.Cli
                 Console.WriteLine($"Rendering test image to: {testRenderOut}");
                 RenderTestImage(generator.AtlasStorage.Bitmap, testRenderOut);
             }
+            sw.Stop();
+            Console.WriteLine($"  Time: {sw.Elapsed.TotalSeconds:F3}s");
+            phaseTimings.Add(("Saving Outputs", sw.Elapsed));
+
+            // Summary
+            Console.WriteLine();
+            Console.WriteLine("-------------------------------------------------------------------------------");
+            Console.WriteLine(" Performance Summary");
+            Console.WriteLine("-------------------------------------------------------------------------------");
+            TimeSpan total = TimeSpan.Zero;
+            foreach (var t in phaseTimings)
+            {
+                Console.WriteLine($"  {t.Name,-20} : {t.Duration.TotalSeconds,8:F3} s");
+                total += t.Duration;
+            }
+            Console.WriteLine("-------------------------------------------------------------------------------");
+            Console.WriteLine($"  {"Total Time",-20} : {total.TotalSeconds,8:F3} s");
+            Console.WriteLine("-------------------------------------------------------------------------------");
 
             Console.WriteLine("Done.");
             return 0;
@@ -570,7 +594,7 @@ namespace MsdfAtlasGen.Cli
             Console.WriteLine("-------------------------------------------------------------------------------");
             Console.WriteLine($"  Font Path:        {_config.FontPath}");
             Console.WriteLine($"  Font Name:        {_config.FontName ?? "Auto"}");
-            Console.WriteLine($"  Font Name:        {_config.FontName ?? "Auto"}");
+
             string charsetInfo = _config.AllGlyphs ? "All Glyphs" : (!string.IsNullOrEmpty(_config.InlineChars) ? "Inline Content" : (string.IsNullOrEmpty(_config.CharsetPath) ? "ASCII (Default)" : _config.CharsetPath));
             Console.WriteLine($"  Charset:          {charsetInfo}");
             Console.WriteLine($"  Atlas Type:       {_config.Type}");
