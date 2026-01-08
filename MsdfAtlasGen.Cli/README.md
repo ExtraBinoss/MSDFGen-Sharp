@@ -128,6 +128,44 @@ The tool automatically organizes outputs:
 
 ---
 
+## 📊 Extreme Performance
+
+Expect extreme performance when using the tool with large atlases and complex fonts.
+For normal fonts and atlases, the tool should be able to generate an atlas in a matter of seconds. (In about 0.5 to 2 seconds maximum)
+
+For complex fonts, I will let you see for yourself via the Korean Font test.
+
+### Command : 
+```bash
+dotnet run -c Release -- -font "../assets/test_fonts/jp_kr_fonts/NotoSansKR-Regular.ttf" -size 10 -dimensions 8192 8192 -fnt -testrender -spacing 2 -miterlimit 3.0 -coloringstrategy simple -errorcorrection indiscriminate -charset ../assets/test_fonts/charsets/eascii_korean.txt
+```
+
+### Laptop : 
+- Intel Core Ultra 5 125H (PowerSaver battery mode + PowerSaving in Windows + Unplugged)
+- IGPU
+- 32GB Ram.
+
+### Test Conditions : 
+- NotoSansKR-Regular.ttf (Korean font)
+- Atlas of 8192x8192 
+- EASCII_koran (11260 Glyphs)
+- Rendered using `testrender` but is totally optional.
+
+### Test Results : 
+
+| Task | Duration |
+| :--- | :--- |
+| Init & Load Font | 0,010 s |
+| Load Charset & Parse | 2,603 s |
+| Edge Coloring | 0,101 s |
+| Packing | 0,564 s |
+| Generation | 47,278 s |
+| Save Atlas PNG | 5,621 s |
+| Save FNT | 0,164 s |
+| Test Render | 6,088 s |
+| **Total Time** | **62,429 s** |
+
+
 ## 🎨 Visual Showcase
 
 ### Complex Font Example: Barbarian
