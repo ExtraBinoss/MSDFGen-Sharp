@@ -20,6 +20,10 @@ dotnet run -c Release -- -font "../assets/test_fonts/Roboto-Regular.ttf" -size 9
 # Generate a 4092x4092 atlas for the Roboto font with BMFont outputs and a test render with allglyphs (may be big and hard to read at first glance.):
 
 dotnet run -c Release -- -font "../assets/test_fonts/Roboto-Regular.ttf" -size 10 -dimensions 4092 4092 -fnt -testrender -spacing 2 -miterlimit 3.0 -coloringstrategy simple -errorcorrection indiscriminate -allglyphs 
+
+# Generate a 8192x8192 Koran Font with Eascii_korean.txt
+dotnet run -c Release -- -font "../assets/test_fonts/jp_kr_fonts/NotoSansKR-Regular.ttf" -size 10 -dimensions 8192 8192 -fnt -testrender -spacing 2 -miterlimit 3.0 -coloringstrategy simple -errorcorrection indiscriminate -charset ../assets/test_fonts/charsets/eascii_korean.txt 
+
 ```
 
 ---

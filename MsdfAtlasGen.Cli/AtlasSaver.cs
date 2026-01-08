@@ -4,6 +4,9 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Msdfgen;
 
+using SixLabors.ImageSharp.Formats.Png;
+using System.Threading.Tasks;
+
 namespace MsdfAtlasGen.Cli
 {
     /// <summary>
@@ -20,40 +23,67 @@ namespace MsdfAtlasGen.Cli
                 Directory.CreateDirectory(dir);
             }
 
-            using var image = new Image<Rgba32>(bitmap.Width, bitmap.Height);
+            int width = bitmap.Width;
+            int height = bitmap.Height;
+            int channels = bitmap.Channels;
+            var msdfPixels = bitmap.Pixels;
             
-            for (int y = 0; y < bitmap.Height; y++)
-            {
-                for (int x = 0; x < bitmap.Width; x++)
-                {
-                    // Flip Y for image formats (top-down vs bottom-up)
-                    int srcY = bitmap.Height - 1 - y;
+            // Create a buffer for Rgba32 pixels
+            Rgba32[] pixelBuffer = new Rgba32[width * height];
 
-                    if (bitmap.Channels == 1)
+            // Parallelize buffer filling
+            Parallel.For(0, height, y =>
+            {
+                // ImageSharp is top-down, MSDFGen bitmap is bottom-up usually.
+                int srcY = height - 1 - y;
+                int srcRowOffset = channels * (width * srcY);
+                int dstRowOffset = width * y;
+
+                if (channels == 1)
+                {
+                    for (int x = 0; x < width; x++)
                     {
-                        float v = bitmap[x, srcY, 0];
+                        float v = msdfPixels[srcRowOffset + x];
                         byte b = Clamp(v * 255.0f);
-                        image[x, y] = new Rgba32(b, b, b, 255);
-                    }
-                    else if (bitmap.Channels == 3)
-                    {
-                        byte r = Clamp(bitmap[x, srcY, 0] * 255.0f);
-                        byte g = Clamp(bitmap[x, srcY, 1] * 255.0f);
-                        byte b = Clamp(bitmap[x, srcY, 2] * 255.0f);
-                        image[x, y] = new Rgba32(r, g, b, 255);
-                    }
-                    else if (bitmap.Channels == 4)
-                    {
-                        byte r = Clamp(bitmap[x, srcY, 0] * 255.0f);
-                        byte g = Clamp(bitmap[x, srcY, 1] * 255.0f);
-                        byte b = Clamp(bitmap[x, srcY, 2] * 255.0f);
-                        byte a = Clamp(bitmap[x, srcY, 3] * 255.0f);
-                        image[x, y] = new Rgba32(r, g, b, a);
+                        pixelBuffer[dstRowOffset + x] = new Rgba32(b, b, b, 255);
                     }
                 }
-            }
+                else if (channels == 3)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        int srcOffset = srcRowOffset + (x * 3);
+                        byte r = Clamp(msdfPixels[srcOffset] * 255.0f);
+                        byte g = Clamp(msdfPixels[srcOffset + 1] * 255.0f);
+                        byte b = Clamp(msdfPixels[srcOffset + 2] * 255.0f);
+                        pixelBuffer[dstRowOffset + x] = new Rgba32(r, g, b, 255);
+                    }
+                }
+                else if (channels == 4)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        int srcOffset = srcRowOffset + (x * 4);
+                        byte r = Clamp(msdfPixels[srcOffset] * 255.0f);
+                        byte g = Clamp(msdfPixels[srcOffset + 1] * 255.0f);
+                        byte b = Clamp(msdfPixels[srcOffset + 2] * 255.0f);
+                        byte a = Clamp(msdfPixels[srcOffset + 3] * 255.0f);
+                        pixelBuffer[dstRowOffset + x] = new Rgba32(r, g, b, a);
+                    }
+                }
+            });
 
-            image.Save(filename);
+            // Load from buffer and save
+            using var image = Image.LoadPixelData<Rgba32>(pixelBuffer, width, height);
+            
+            // Fast PNG encoding
+            var encoder = new PngEncoder
+            {
+                CompressionLevel = PngCompressionLevel.BestSpeed,
+                FilterMethod = PngFilterMethod.None
+            };
+
+            image.SaveAsPng(filename, encoder);
         }
 
         private static byte Clamp(float v)

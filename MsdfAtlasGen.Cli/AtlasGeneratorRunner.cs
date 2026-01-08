@@ -267,11 +267,16 @@ namespace MsdfAtlasGen.Cli
 
             // 8. Save outputs
             Console.WriteLine("[PHASE] Saving Outputs...");
+            sw.Restart();
             Console.WriteLine($"Saving image to: {imageOut}");
             AtlasSaver.SaveAtlas(generator.AtlasStorage.Bitmap, imageOut);
+            sw.Stop();
+            Console.WriteLine($"  Atlas PNG Save: {sw.Elapsed.TotalSeconds:F3}s");
+            phaseTimings.Add(("Save Atlas PNG", sw.Elapsed));
 
             if (jsonOut != null)
             {
+                sw.Restart();
                 Console.WriteLine($"Saving JSON to: {jsonOut}");
                 var metrics = new JsonAtlasMetrics
                 {
@@ -282,6 +287,9 @@ namespace MsdfAtlasGen.Cli
                     YDirection = _config.YOrigin
                 };
                 JsonExporter.Export(fonts.ToArray(), _config.Type, metrics, jsonOut, _config.Kerning);
+                sw.Stop();
+                Console.WriteLine($"  JSON Save: {sw.Elapsed.TotalSeconds:F3}s");
+                phaseTimings.Add(("Save JSON", sw.Elapsed));
             }
 
             // Debug: dump a single glyph if requested
@@ -293,12 +301,17 @@ namespace MsdfAtlasGen.Cli
 
             if (csvOut != null)
             {
+                sw.Restart();
                 Console.WriteLine($"Saving CSV to: {csvOut}");
                 CsvExporter.Export(fonts.ToArray(), width, height, _config.YOrigin, csvOut);
+                sw.Stop();
+                Console.WriteLine($"  CSV Save: {sw.Elapsed.TotalSeconds:F3}s");
+                phaseTimings.Add(("Save CSV", sw.Elapsed));
             }
 
             if (fntOut != null)
             {
+                sw.Restart();
                 Console.WriteLine($"Saving FNT to: {fntOut}");
                 double distanceRange = _config.PxRange.Upper - _config.PxRange.Lower;
 
@@ -320,21 +333,25 @@ namespace MsdfAtlasGen.Cli
                     _config.Spacing,
                     packerScale
                 );
+                sw.Stop();
+                Console.WriteLine($"  FNT Export: {sw.Elapsed.TotalSeconds:F3}s");
+                phaseTimings.Add(("Save FNT", sw.Elapsed));
             }
 
             // 9. Test Render (optional)
             if (_config.TestRender)
             {
+                sw.Restart();
                 string testRenderOut = string.IsNullOrEmpty(_config.TestRenderFile)
                     ? ResolveOutputPath("", $"{fontName}_render.png", RenderFolder)
                     : ResolveOutputPath(_config.TestRenderFile, null, RenderFolder);
                 
                 Console.WriteLine($"Rendering test image to: {testRenderOut}");
                 RenderTestImage(generator.AtlasStorage.Bitmap, testRenderOut);
+                sw.Stop();
+                Console.WriteLine($"  Test Render: {sw.Elapsed.TotalSeconds:F3}s");
+                phaseTimings.Add(("Test Render", sw.Elapsed));
             }
-            sw.Stop();
-            Console.WriteLine($"  Time: {sw.Elapsed.TotalSeconds:F3}s");
-            phaseTimings.Add(("Saving Outputs", sw.Elapsed));
 
             // Summary
             Console.WriteLine();
