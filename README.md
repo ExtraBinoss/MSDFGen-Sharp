@@ -69,3 +69,9 @@ Below are examples of generated MSDF atlases and how they appear when rendered.
 | **Roboto Regular** | ![Roboto Atlas](assets/images/msdf-atlas-gen/Roboto-Regular.png) | ![Roboto Render](assets/images/msdf-atlas-gen/Roboto-Regular_render.png) |
 | **Barbarian** (Fantasy) | ![Barbarian Atlas](assets/images/msdf-atlas-gen/Barbarian.png) | ![Barbarian Render](assets/images/msdf-atlas-gen/Barbarian_render.png) |
 
+
+## 📚 Authors Note
+
+If you find this project useful, please consider giving it a star on GitHub. It helps me keep track of the project's popularity and inspires me to continue working on it.
+
+Thank you for using MSDF-Sharp!
